@@ -22,7 +22,11 @@ jobs:
         run: |
           pip install pandas geopandas selenium webdriver-manager requests
       
+      # 🟢 MODIFICADO: Agregar variables de entorno
       - name: Ejecutar script de descarga
+        env:
+          MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+          MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
         run: python scripts/descargar_csv.py
       
       - name: Verificar archivo CSV
@@ -59,7 +63,6 @@ jobs:
           ls -lh datos_actualizados.geojson
           echo "✅ GeoJSON verificado"
       
-      # 🟢🟢🟢🟢🟢 NUEVO PASO - PEGA AQUÍ 🟢🟢🟢🟢🟢
       - name: Inyectar credenciales en HTML
         run: |
           echo "🔐 Inyectando credenciales en index.html..."
@@ -75,7 +78,6 @@ jobs:
           echo "✅ Credenciales inyectadas:"
           echo "   Usuario: ${{ secrets.MULTIRIESGO_USUARIO }}"
           echo "   Contraseña: [PROTEGIDA]"
-      # 🟢🟢🟢🟢🟢 FIN NUEVO PASO 🟢🟢🟢🟢🟢
       
       - name: Commit and push
         run: |
