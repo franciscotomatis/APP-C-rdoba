@@ -1,0 +1,57 @@
+name: Ejecutar Proceso Completo
+
+on:
+  schedule:
+    # 8 AM y 8 PM UTC (5 AM y 5 PM Argentina)
+    - cron: '0 8,20 * * *'
+  workflow_dispatch:  # Para ejecutar manualmente
+
+jobs:
+  ejecutar:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Descargar repositorio
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: 📦 Instalar dependencias EXACTAS
+      run: |
+        pip install selenium==4.15.2
+        pip install webdriver-manager
+        pip install pandas openpyxl geopandas shapely
+        pip install folium ipywidgets OWSLib
+        sudo apt-get update
+        sudo apt-get install -y chromium-chromedriver
+        
+    - name: 🚀 Ejecutar proceso completo
+      env:
+        USUARIO: ${{ secrets.USUARIO }}
+        CONTRASENA: ${{ secrets.CONTRASENA }}
+      run: |
+        echo "🔐 Usuario: $USUARIO"
+        mkdir -p data app
+        python scripts/ejecutar_colab.py
+        
+    - name: 📤 Subir archivos generados
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        
+        # Agregar todos los archivos nuevos
+        git add data/*.geojson || true
+        git add data/*.json || true
+        git add app/*.html || true
+        
+        # Solo commit si hay cambios
+        if git diff --staged --quiet; then
+          echo "📭 No hay cambios"
+        else
+          git commit -m "🔄 Actualización automática $(date '+%Y-%m-%d %H:%M')"
+          git push
+          echo "✅ Cambios subidos"
+        fi
