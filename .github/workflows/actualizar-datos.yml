@@ -8,6 +8,10 @@ on:
   # También se puede ejecutar manualmente desde GitHub Actions
   workflow_dispatch:
 
+# PERMISOS PARA QUE PUEDA HACER PUSH
+permissions:
+  contents: write  # ← ESTA LÍNEA ES CLAVE
+
 jobs:
   actualizar-datos:
     runs-on: ubuntu-latest
@@ -16,7 +20,9 @@ jobs:
     - name: 📥 Checkout del repositorio
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Traer todo el historial
+        fetch-depth: 0
+        # Configurar el token para permisos de escritura
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: 🐍 Configurar Python
       uses: actions/setup-python@v4
@@ -46,7 +52,7 @@ jobs:
         fi
     
     - name: 🗺️ Convertir CSV a GeoJSON
-      run: python convertir_csv_a_geojson.py  # ← NOMBRE CORREGIDO
+      run: python convertir_csv_a_geojson.py
     
     - name: 📊 Verificar GeoJSON generado
       run: |
