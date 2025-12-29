@@ -5,9 +5,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Estas variables las tomará de los "Secrets" de tu GitHub
-USUARIO = os.environ.get('USUARIO', 'Sancor')
-CONTRASENA = os.environ.get('CONTRASENA', '2025Sancor')
+# Buscamos los secretos con los nombres que creaste
+USUARIO = os.environ.get('MULTIRIESGO_USUARIO')
+CONTRASENA = os.environ.get('MULTIRIESGO_CONTRASENA')
 
 def convertir_a_geojson(archivo_csv):
     print("🛠️ Iniciando conversión a GeoJSON...")
@@ -28,7 +28,7 @@ def convertir_a_geojson(archivo_csv):
             })
         except: continue
     
-    # NOMBRE FIJO PARA TU APP
+    # Nombre fijo para que tu App siempre encuentre el mismo archivo
     nombre_final = "poligonos.geojson"
     with open(nombre_final, 'w', encoding='utf-8') as f:
         json.dump({"type": "FeatureCollection", "features": features}, f, ensure_ascii=False)
@@ -40,9 +40,7 @@ def ejecutar():
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    # Definimos carpeta actual para la descarga
-    prefs = {"download.default_directory": os.getcwd()}
-    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option("prefs", {"download.default_directory": os.getcwd()})
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
@@ -61,13 +59,13 @@ def ejecutar():
         
         if boton_csv:
             driver.execute_script("arguments[0].click();", boton_csv)
-            time.sleep(15) # Tiempo para que baje el CSV
+            time.sleep(15) 
             
             archivos = [f for f in os.listdir('.') if f.endswith('.csv')]
             if archivos:
                 csv_descargado = max(archivos, key=os.path.getctime)
                 convertir_a_geojson(csv_descargado)
-                os.remove(csv_descargado) # Borramos el CSV para limpiar
+                os.remove(csv_descargado) 
             else:
                 print("❌ No se encontró el CSV descargado.")
     finally:
