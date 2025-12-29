@@ -65,6 +65,29 @@ jobs:
           echo "❌ No se generó datos_actualizados.geojson"
           exit 1
         fi
+
+      - name: Inyectar credenciales en HTML
+        run: |
+          echo "🔐 Inyectando credenciales en index.html..."
+          
+          # Verificar que index.html existe
+          if [ ! -f "index.html" ]; then
+            echo "❌ ERROR: index.html no encontrado"
+            exit 1
+          fi
+          
+          # Reemplazar credenciales con tus Secrets
+          sed -i "s/const APP_USERNAME = \".*\"/const APP_USERNAME = \"${{ secrets.MULTIRIESGO_USUARIO }}\"/g" index.html
+          sed -i "s/const APP_PASSWORD = \".*\"/const APP_PASSWORD = \"${{ secrets.MULTIRIESGO_CONTRASENA }}\"/g" index.html
+          
+          # Verificar que se reemplazó
+          echo "✅ Credenciales inyectadas:"
+          echo "   Usuario: ${{ secrets.MULTIRIESGO_USUARIO }}"
+          echo "   Contraseña: [PROTEGIDA]"
+          
+          # Mostrar línea modificada (sin mostrar contraseña completa)
+          grep -n "const APP_USERNAME" index.html || echo "⚠️ No se encontró APP_USERNAME"
+          grep -n "const APP_PASSWORD" index.html | head -c 50 && echo "..."
     
     - name: 📤 Commit y push de cambios
       run: |
