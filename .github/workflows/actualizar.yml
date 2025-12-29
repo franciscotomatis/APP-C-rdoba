@@ -1,35 +1,50 @@
-name: Actualizar Poligonos Diario
+name: Actualizar Datos y Visor
+
 on:
+  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
   schedule:
-    - cron: '0 5 * * *' # Se ejecuta a las 2 AM de Argentina
-  workflow_dispatch: # Esto permite que lo ejecutes vos a mano para probar
+    - cron: '0 8 * * *' # Se ejecuta automáticamente todos los días (ej. 8 AM UTC)
 
 jobs:
-  build:
+  proceso-multiriesgo:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout código
+      - name: Checkout repositorio
         uses: actions/checkout@v3
 
-      - name: Instalar Python
+      - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
-      - name: Instalar dependencias
+      - name: Instalar Dependencias
         run: |
-          pip install selenium webdriver-manager pandas
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Ejecutar script
+      - name: Instalar Navegador Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: 🛠️ Paso 1 - Extracción Selenium (script_geojson.py)
         env:
           MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
           MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
         run: python script_geojson.py
 
-      - name: Subir poligonos.geojson al repositorio
+      - name: 🎨 Paso 2 - Generación del Visor (generar_visor.py)
+        env:
+          MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+          MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
+        run: python generar_visor.py
+
+      - name: 🚀 Commit y Push de resultados
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add poligonos.geojson
-          git commit -m "Actualización automática de polígonos" || exit 0
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add poligonos.geojson index.html
+          # Solo hace commit si hubo cambios en los archivos
+          git diff --quiet && git diff --staged --quiet || git commit -m "Actualización automática: $(date +'%Y-%m-%d %H:%M')"
           git push
