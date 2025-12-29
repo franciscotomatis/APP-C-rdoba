@@ -4,11 +4,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'
-  push:
-    branches: [ main ]
-    paths:
-      - 'script_geojson.py'
-      - 'generar_visor.py'
 
 jobs:
   generar-app:
@@ -34,11 +29,18 @@ jobs:
         pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
         pip install owslib branca
         
-    # 4. Limpiar archivos viejos
-    - name: Limpiar archivos viejos
+    # 4. LIMPIAR TODO ANTES
+    - name: Limpiar todo
       run: |
-        echo "🧹 Limpiando archivos viejos..."
-        rm -f index.html
+        echo "🧹 LIMPIANDO TODO..."
+        echo "Archivos ANTES de limpiar:"
+        ls -la *.html *.geojson 2>/dev/null || echo "No hay archivos"
+        
+        # Eliminar archivos problemáticos
+        rm -f appvieja.html index.html
+        
+        echo "Archivos DESPUÉS de limpiar:"
+        ls -la *.html *.geojson 2>/dev/null || echo "No hay archivos"
         
     # 5. Descargar datos
     - name: Descargar datos de Multiriesgo
@@ -46,54 +48,76 @@ jobs:
         MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
         MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
       run: |
-        echo "🚀 Descargando datos..."
+        echo "🚀 EJECUTANDO script_geojson.py..."
         python script_geojson.py
+        echo "✅ script_geojson.py terminó"
         
-    # 6. Generar aplicación (DIRECTAMENTE COMO INDEX.HTML)
-    - name: Generar aplicación web
+    # 6. DEBUG: Ver qué pasó después de script_geojson.py
+    - name: DEBUG después de descarga
       run: |
-        echo "🛠️ Generando index.html..."
-        python generar_visor.py
-        
-    # 7. Verificar que se creó index.html
-    - name: Verificar index.html
-      run: |
-        echo "🔍 Verificando index.html..."
-        if [ -f "index.html" ]; then
-          echo "✅ index.html creado exitosamente!"
-          echo "📊 Tamaño:"
-          ls -lh index.html
+        echo "📁 ¿Se creó poligonos.geojson?"
+        if [ -f "poligonos.geojson" ]; then
+          echo "✅ SÍ existe poligonos.geojson"
+          ls -lh poligonos.geojson
         else
-          echo "❌ ERROR: No se creó index.html"
-          echo "📁 Archivos HTML disponibles:"
-          ls -la *.html 2>/dev/null || echo "No hay archivos HTML"
-          exit 1
+          echo "❌ NO existe poligonos.geojson"
+          echo "📁 Archivos actuales:"
+          ls -la
         fi
         
-    # 8. Configurar git
-    - name: Configurar git
+    # 7. DEBUG: Ver contenido de generar_visor.py
+    - name: DEBUG ver script generar_visor.py
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        echo "🔍 Revisando generar_visor.py..."
+        echo "=== BUSCANDO 'output_file' en generar_visor.py ==="
+        grep -n "output_file" generar_visor.py || echo "No encontré 'output_file'"
+        echo "=== BUSCANDO 'save(' en generar_visor.py ==="
+        grep -n "save(" generar_visor.py || echo "No encontré 'save('"
+        echo "=== BUSCANDO 'index.html' en generar_visor.py ==="
+        grep -n "index.html" generar_visor.py || echo "No encontré 'index.html'"
         
-    # 9. Subir al repositorio
-    - name: Subir archivos al repositorio
+    # 8. Generar aplicación
+    - name: Generar aplicación web
+      run: |
+        echo "🛠️ EJECUTANDO generar_visor.py..."
+        python generar_visor.py
+        echo "✅ generar_visor.py terminó"
+        
+    # 9. DEBUG: Ver qué archivos se crearon
+    - name: DEBUG archivos creados
+      run: |
+        echo "📁 ARCHIVOS CREADOS DESPUÉS DE generar_visor.py:"
+        ls -la *.html *.geojson 2>/dev/null || echo "No hay archivos"
+        
+        echo "📁 TODOS los archivos:"
+        ls -la
+        
+    # 10. Si hay index.html, subirlo
+    - name: Subir si se creó index.html
+      if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "📤 Preparando para subir..."
-        
-        # Agregar solo index.html y poligonos.geojson
-        git add index.html poligonos.geojson
-        
-        # Verificar si hay cambios
-        if ! git diff --cached --quiet; then
-          echo "📝 Haciendo commit..."
-          git commit -m "🌱 App actualizada: $(date '+%d/%m %H:%M')"
+        if [ -f "index.html" ]; then
+          echo "🎉 ¡index.html SE CREÓ!"
           
-          echo "⬆️ Subiendo a GitHub..."
-          git push
-          echo "✅ ¡Todo subido exitosamente!"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          git add index.html poligonos.geojson
+          
+          if ! git diff --cached --quiet; then
+            git commit -m "✅ App generada: $(date '+%d/%m %H:%M')"
+            git push
+            echo "✅ Subido a GitHub"
+          else
+            echo "⚠️ Sin cambios"
+          fi
         else
-          echo "⚠️ No hay cambios nuevos"
+          echo "❌ ERROR CRÍTICO: generar_visor.py NO creó index.html"
+          echo "💡 Posibles causas:"
+          echo "   1. Error en generar_visor.py"
+          echo "   2. No guarda como index.html"
+          echo "   3. Hay una excepción que detiene la ejecución"
+          exit 1
         fi
