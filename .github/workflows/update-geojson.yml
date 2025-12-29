@@ -1,0 +1,77 @@
+name: Update GeoJSON Data
+
+on:
+  schedule:
+    # Ejecutar a las 8 AM y 8 PM UTC (5 AM y 5 PM Argentina)
+    - cron: '0 8,20 * * *'
+  workflow_dispatch:  # Permite ejecución manual
+  push:
+    branches: [ main ]
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        
+    - name: Install Python dependencies
+      run: |
+        cd scripts
+        pip install -r requirements.txt
+        
+    - name: Download CSV (with credentials)
+      env:
+        MULTIRIESGO_USER: ${{ secrets.MULTIRIESGO_USER }}
+        MULTIRIESGO_PASS: ${{ secrets.MULTIRIESGO_PASS }}
+      run: |
+        mkdir -p data
+        cd scripts
+        python download_csv.py
+        
+    - name: Convert to GeoJSON
+      run: |
+        cd scripts
+        python convert_to_geojson.py
+        
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add data/latest.geojson
+        git add data/conversion_report.json 2>/dev/null || true
+        
+        # Verificar si hay cambios
+        if git diff --staged --quiet; then
+          echo "No hay cambios en los datos"
+        else
+          git commit -m "📊 Update GeoJSON data - $(date +'%Y-%m-%d %H:%M')"
+          git push
+        fi
+        
+  deploy-to-pages:
+    needs: update-data
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./app
+        keep_files: false
