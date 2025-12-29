@@ -34,11 +34,11 @@ jobs:
         pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
         pip install owslib branca
         
-    # 4. Limpiar archivos viejos (OPCIONAL)
+    # 4. Limpiar archivos viejos
     - name: Limpiar archivos viejos
       run: |
-        echo "🧹 Limpiando archivos HTML viejos..."
-        rm -f index.html app_generada.html visor*.html
+        echo "🧹 Limpiando archivos viejos..."
+        rm -f index.html
         
     # 5. Descargar datos
     - name: Descargar datos de Multiriesgo
@@ -55,16 +55,18 @@ jobs:
         echo "🛠️ Generando index.html..."
         python generar_visor.py
         
-    # 7. Verificar que se creó
+    # 7. Verificar que se creó index.html
     - name: Verificar index.html
       run: |
+        echo "🔍 Verificando index.html..."
         if [ -f "index.html" ]; then
           echo "✅ index.html creado exitosamente!"
+          echo "📊 Tamaño:"
           ls -lh index.html
         else
           echo "❌ ERROR: No se creó index.html"
-          echo "📁 Archivos disponibles:"
-          ls -la *.html
+          echo "📁 Archivos HTML disponibles:"
+          ls -la *.html 2>/dev/null || echo "No hay archivos HTML"
           exit 1
         fi
         
@@ -79,22 +81,19 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Solo subir los archivos importantes
+        echo "📤 Preparando para subir..."
+        
+        # Agregar solo index.html y poligonos.geojson
         git add index.html poligonos.geojson
         
+        # Verificar si hay cambios
         if ! git diff --cached --quiet; then
-          git commit -m "📱 App actualizada: $(date '+%d/%m %H:%M')"
+          echo "📝 Haciendo commit..."
+          git commit -m "🌱 App actualizada: $(date '+%d/%m %H:%M')"
+          
+          echo "⬆️ Subiendo a GitHub..."
           git push
-          echo "✅ Subido a GitHub"
+          echo "✅ ¡Todo subido exitosamente!"
         else
-          echo "⚠️ Sin cambios"
+          echo "⚠️ No hay cambios nuevos"
         fi
-        
-    # 10. (Opcional) Artifact
-    - name: Subir como artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-multiriesgo
-        path: |
-          index.html
-          poligonos.geojson
