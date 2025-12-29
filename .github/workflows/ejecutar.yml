@@ -42,16 +42,34 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         
-        # Agregar todos los archivos nuevos
-        git add data/*.geojson || true
-        git add data/*.json || true
-        git add app/*.html || true
+        # Verificar si hay archivos nuevos
+        echo "🔍 Buscando archivos generados..."
+        ls -la data/ 2>/dev/null || echo "No hay data/"
+        ls -la app/ 2>/dev/null || echo "No hay app/"
         
-        # Solo commit si hay cambios
-        if git diff --staged --quiet; then
-          echo "📭 No hay cambios"
+        # Agregar archivos GeoJSON
+        if [ -f "data/poligonos.geojson" ]; then
+          git add data/poligonos.geojson
+          echo "✅ Agregado: data/poligonos.geojson"
+        fi
+        
+        # Agregar archivos JSON
+        if [ -f "data/datos.xlsx" ]; then
+          git add data/datos.xlsx
+          echo "✅ Agregado: data/datos.xlsx"
+        fi
+        
+        # Agregar HTML
+        if [ -f "app/index.html" ]; then
+          git add app/index.html
+          echo "✅ Agregado: app/index.html"
+        fi
+        
+        # Verificar si hay cambios
+        if git diff --cached --quiet; then
+          echo "📭 No hay cambios para commit"
         else
           git commit -m "🔄 Actualización automática $(date '+%Y-%m-%d %H:%M')"
           git push
-          echo "✅ Cambios subidos"
+          echo "✅ Cambios subidos a GitHub"
         fi
