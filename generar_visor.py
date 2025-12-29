@@ -1669,7 +1669,7 @@ def crear_app_geojson():
         m.get_root().html.add_child(folium.Element(login_html))
         
         # 💾 GUARDAR ARCHIVO HTML
-        output_file = "app_generada.html"
+        output_file = "index.html"
         m.save(output_file)
         
         print(f"\n✅ Aplicación guardada como: {output_file}")
