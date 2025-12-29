@@ -1,59 +1,20 @@
 // ============================================
 // FUNCIONES ADICIONALES PARA LA APP
+// (EXACTAMENTE IGUALES A TU APP ORIGINAL)
 // ============================================
 
-// 1. CREAR LEYENDA DE CULTIVOS
-function crearLeyendaCultivos(superficiePorCultivo, totalSuperficie) {
-    if (!superficiePorCultivo || Object.keys(superficiePorCultivo).length === 0) {
-        return;
-    }
-    
-    const leyendaDiv = document.getElementById('leyendaCultivos');
-    let contenido = `
-        <div style="font-weight: bold; color: #2E7D32; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-            Cultivos (${Object.keys(superficiePorCultivo).length})
-        </div>
-    `;
-    
-    // Ordenar por superficie (mayor a menor)
-    const cultivosOrdenados = Object.entries(superficiePorCultivo)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8); // Mostrar solo los 8 principales
-    
-    cultivosOrdenados.forEach(([cultivo, hectareas]) => {
-        const porcentaje = totalSuperficie > 0 ? (hectareas / totalSuperficie * 100) : 0;
-        const color = obtenerColorPorCultivo(cultivo);
-        
-        contenido += `
-            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <div class="color-box" style="background-color: ${color};"></div>
-                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 10px; font-weight: bold;">${cultivo.substring(0, 15)}${cultivo.length > 15 ? '...' : ''}</span>
-                    <span style="font-size: 9px; color: #666;">${hectareas.toFixed(0)}ha (${porcentaje.toFixed(0)}%)</span>
-                </div>
-            </div>
-        `;
-    });
-    
-    contenido += `
-        <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #4CAF50; font-size: 10px; font-weight: bold; color: #2E7D32; text-align: center;">
-            TOTAL: ${totalSuperficie.toFixed(0)} ha
-        </div>
-    `;
-    
-    leyendaDiv.innerHTML = contenido;
-}
-
-// 2. CREAR BUSCADOR DE CLIENTES
+// 1. CREAR BUSCADOR DE CLIENTES (LUPA AZUL)
 function crearBuscadorClientes(clientesSet) {
     if (!clientesSet || clientesSet.size === 0) {
+        console.log('⚠️ No se encontraron clientes para el buscador');
         return;
     }
     
     const clientes = Array.from(clientesSet).sort();
     const buscadorDiv = document.getElementById('buscadorClientes');
+    const numPoligonos = geojsonData ? geojsonData.features.length : 0;
     
-    buscadorDiv.innerHTML = `
+    let contenido = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div style="font-weight: bold; color: #000000; font-size: 12px; display: flex; align-items: center;">
                 <span style="margin-right: 5px;">🔍</span>
@@ -81,35 +42,53 @@ function crearBuscadorClientes(clientesSet) {
             </div>
             
             <div id="estadoFiltro" style="font-size: 9px; color: #666; margin-top: 6px; padding-top: 5px; border-top: 1px solid #000000;">
-                Mostrando todos (${clientes.length})
+                Mostrando todos (${numPoligonos})
             </div>
         </div>
     `;
     
+    buscadorDiv.innerHTML = contenido;
+    
     // Configurar toggle
     let contenidoVisible = true;
-    document.getElementById('toggleBuscador').addEventListener('click', function() {
-        const contenido = document.getElementById('contenidoBuscador');
-        const lupita = document.getElementById('buscadorClientes');
-        
-        if (contenidoVisible) {
-            contenido.style.display = 'none';
-            this.innerHTML = '▼';
-            lupita.style.width = '150px';
-            lupita.style.padding = '5px 8px';
-        } else {
-            contenido.style.display = 'block';
-            this.innerHTML = '▲';
-            lupita.style.width = '240px';
-            lupita.style.padding = '10px 12px';
-        }
-        contenidoVisible = !contenidoVisible;
-    });
+    const toggleBtn = document.getElementById('toggleBuscador');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const contenido = document.getElementById('contenidoBuscador');
+            const lupita = document.getElementById('buscadorClientes');
+            
+            if (contenidoVisible) {
+                contenido.style.display = 'none';
+                this.innerHTML = '▼';
+                lupita.style.width = '150px';
+                lupita.style.padding = '5px 8px';
+            } else {
+                contenido.style.display = 'block';
+                this.innerHTML = '▲';
+                lupita.style.width = '240px';
+                lupita.style.padding = '10px 12px';
+            }
+            contenidoVisible = !contenidoVisible;
+        });
+    }
+    
+    // Permitir Enter para filtrar
+    const inputCliente = document.getElementById('clienteInput');
+    if (inputCliente) {
+        inputCliente.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                filtrarCliente();
+            }
+        });
+    }
 }
 
-// 3. FUNCIONES DE FILTRADO
+// 2. FUNCIONES DE FILTRADO (IGUAL A TU APP)
 function filtrarCliente() {
-    const valor = document.getElementById('clienteInput').value.toLowerCase();
+    const input = document.getElementById('clienteInput');
+    if (!input) return;
+    
+    const valor = input.value.toLowerCase();
     if (!valor) {
         alert('Por favor, escribe o selecciona un cliente');
         return;
@@ -118,30 +97,44 @@ function filtrarCliente() {
     let boundsFiltrados = null;
     let contador = 0;
     
+    // Almacenar estilos originales si no están guardados
     geoLayer.eachLayer(function(layer) {
-        const clienteEnPoligono = layer.feature.properties[campoCliente];
+        if (!layer._estiloOriginal) {
+            layer._estiloOriginal = {
+                fillColor: layer.options.fillColor,
+                color: layer.options.color,
+                weight: layer.options.weight,
+                fillOpacity: layer.options.fillOpacity,
+                opacity: layer.options.opacity,
+                interactive: layer.options.interactive
+            };
+        }
+    });
+    
+    // Filtrar
+    geoLayer.eachLayer(function(layer) {
+        const propiedades = layer.feature.properties;
+        const clienteEnPoligono = propiedades[campoCliente];
         
         if (clienteEnPoligono && clienteEnPoligono.toString().toLowerCase().includes(valor)) {
-            // Mostrar este polígono
+            // MOSTRAR
             layer.setStyle({
                 fillOpacity: 0.6,
                 weight: 2,
-                opacity: 1
+                opacity: 1,
+                fillColor: layer._estiloOriginal.fillColor,
+                color: layer._estiloOriginal.color
             });
             layer.options.interactive = true;
             
-            // Agregar a bounds para zoom
+            // Agregar a bounds
             const layerBounds = layer.getBounds();
             if (layerBounds) {
-                if (!boundsFiltrados) {
-                    boundsFiltrados = layerBounds;
-                } else {
-                    boundsFiltrados = boundsFiltrados.extend(layerBounds);
-                }
+                boundsFiltrados = boundsFiltrados ? boundsFiltrados.extend(layerBounds) : layerBounds;
             }
             contador++;
         } else {
-            // Ocultar este polígono
+            // OCULTAR COMPLETAMENTE
             layer.setStyle({
                 fillOpacity: 0,
                 weight: 0,
@@ -151,46 +144,90 @@ function filtrarCliente() {
         }
     });
     
+    // Actualizar estado
     const estadoDiv = document.getElementById('estadoFiltro');
-    if (contador > 0) {
-        estadoDiv.innerHTML = `Mostrando ${contador} polígonos`;
-        estadoDiv.style.color = '#4CAF50';
-        
-        // Zoom a los polígonos filtrados
-        if (boundsFiltrados) {
-            map.fitBounds(boundsFiltrados, { padding: [50, 50] });
+    if (estadoDiv) {
+        if (contador > 0) {
+            estadoDiv.innerHTML = `Mostrando ${contador} polígonos`;
+            estadoDiv.style.color = '#4CAF50';
+            
+            // Zoom a los filtrados
+            if (boundsFiltrados) {
+                map.fitBounds(boundsFiltrados, { padding: [50, 50] });
+            }
+        } else {
+            estadoDiv.innerHTML = '❌ No se encontraron';
+            estadoDiv.style.color = '#f44336';
         }
-    } else {
-        estadoDiv.innerHTML = '❌ No se encontraron';
-        estadoDiv.style.color = '#f44336';
     }
 }
 
 function resetearFiltro() {
-    document.getElementById('clienteInput').value = '';
+    const input = document.getElementById('clienteInput');
+    if (input) input.value = '';
     
-    // Restaurar todos los polígonos
+    // Restaurar TODOS los polígonos
     geoLayer.eachLayer(function(layer) {
-        const propiedades = layer.feature.properties;
-        layer.setStyle({
-            fillColor: propiedades._color_fill || '#9C27B0',
-            color: propiedades._color_border || '#7B1FA2',
-            weight: 2,
-            fillOpacity: 0.6,
-            opacity: 1
-        });
-        layer.options.interactive = true;
+        if (layer._estiloOriginal) {
+            layer.setStyle(layer._estiloOriginal);
+            layer.options.interactive = true;
+        }
     });
     
-    // Restaurar zoom
+    // Restaurar zoom original
     if (boundsGeneral && boundsGeneral.isValid()) {
         map.fitBounds(boundsGeneral);
     }
     
     // Actualizar estado
     const estadoDiv = document.getElementById('estadoFiltro');
-    estadoDiv.innerHTML = `Mostrando todos (${geojsonData.features.length})`;
-    estadoDiv.style.color = '#666';
+    if (estadoDiv) {
+        estadoDiv.innerHTML = `Mostrando todos (${geojsonData.features.length})`;
+        estadoDiv.style.color = '#666';
+    }
+}
+
+// 3. CREAR LEYENDA DE CULTIVOS (IGUAL A TU APP)
+function crearLeyendaCultivos(superficiePorCultivo, totalSuperficie) {
+    if (!superficiePorCultivo || Object.keys(superficiePorCultivo).length === 0) {
+        return;
+    }
+    
+    const leyendaDiv = document.getElementById('leyendaCultivos');
+    let contenido = `
+        <div style="font-weight: bold; color: #2E7D32; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+            Cultivos (${Object.keys(superficiePorCultivo).length})
+        </div>
+    `;
+    
+    // Ordenar por superficie (mayor a menor) y tomar top 8
+    const cultivosOrdenados = Object.entries(superficiePorCultivo)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+    
+    cultivosOrdenados.forEach(([cultivo, hectareas]) => {
+        const porcentaje = totalSuperficie > 0 ? (hectareas / totalSuperficie * 100) : 0;
+        const color = obtenerColorPorCultivo(cultivo);
+        const nombreCorto = cultivo.length > 15 ? cultivo.substring(0, 15) + '...' : cultivo;
+        
+        contenido += `
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div class="color-box" style="background-color: ${color};"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10px; font-weight: bold;">${nombreCorto}</span>
+                    <span style="font-size: 9px; color: #666;">${hectareas.toFixed(0)}ha (${porcentaje.toFixed(0)}%)</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    contenido += `
+        <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #4CAF50; font-size: 10px; font-weight: bold; color: #2E7D32; text-align: center;">
+            TOTAL: ${totalSuperficie.toFixed(0)} ha
+        </div>
+    `;
+    
+    leyendaDiv.innerHTML = contenido;
 }
 
 // 4. CREAR LEYENDA DE PRECIPITACIÓN
@@ -209,50 +246,105 @@ function crearLeyendaPrecipitacion() {
         </div>
         
         <div style="margin-bottom: 10px;">
-            ${crearEscalaColores()}
-        </div>
-    `;
-}
-
-function crearEscalaColores() {
-    const escalas = [
-        { min: 0, max: 2, color: '#9e9eFF' },
-        { min: 2, max: 5, color: '#0000FF' },
-        { min: 5, max: 10, color: '#00FFFF' },
-        { min: 10, max: 15, color: '#00FF80' },
-        { min: 15, max: 20, color: '#00FF00' },
-        { min: 20, max: 30, color: '#FFFF00' },
-        { min: 30, max: 50, color: '#FFA500' },
-        { min: 50, max: 100, color: '#FF4500' },
-        { min: 100, max: '>', color: '#FF0000' }
-    ];
-    
-    return escalas.map(escala => `
-        <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <div style="width: 18px; height: 18px; background-color: ${escala.color}; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
-            <div style="flex: 1; display: flex; justify-content: space-between;">
-                <span style="font-size: 10px;">${escala.min}</span>
-                <span style="font-size: 10px; color: #666;">mm</span>
-                <span style="font-size: 10px;">${escala.max}</span>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #9e9eFF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">0</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">2</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #0000FF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">2</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">5</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FFFF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">5</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">10</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FF80; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">10</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">15</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FF00; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">15</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">20</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FFFF00; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">20</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">30</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FFA500; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">30</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">50</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FF4500; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">50</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">100</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center;">
+                <div style="width: 18px; height: 18px; background-color: #FF0000; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px; font-weight: bold;">> 100</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px; font-weight: bold;"></span>
+                </div>
             </div>
         </div>
-    `).join('');
+    `;
 }
 
 function ocultarLeyendaPrecip() {
     document.getElementById('leyendaPrecip').style.display = 'none';
 }
 
-// 5. CREAR PANEL DE GRÁFICOS
+// 5. CREAR PANEL DE GRÁFICOS (COMPARACIÓN ZONAS)
 function crearPanelGraficos(hectareasPorZona) {
     const panelDiv = document.getElementById('panelGraficos');
-    
     const zonasOrdenadas = ["1", "2", "3", "4"];
+    
     let datosProyectados = [];
     let datosReales = [];
     let diferencias = [];
     let porcentajesDif = [];
     
+    // Preparar datos
     zonasOrdenadas.forEach(zona => {
         const proyectado = HECTAREAS_PROYECTADAS[zona] || 0;
         const real = hectareasPorZona[zona] || 0;
@@ -266,8 +358,15 @@ function crearPanelGraficos(hectareasPorZona) {
     });
     
     const maxValor = Math.max(...datosProyectados, ...datosReales) || 100000;
+    const totalProyectado = datosProyectados.reduce((a, b) => a + b, 0);
+    const totalReal = datosReales.reduce((a, b) => a + b, 0);
+    const totalDiferencia = totalReal - totalProyectado;
+    const totalPorcentaje = totalProyectado > 0 ? (totalDiferencia / totalProyectado * 100) : 0;
     
+    // Generar HTML para gráficos
     let barrasHTML = '';
+    let tablaHTML = '';
+    
     zonasOrdenadas.forEach((zona, i) => {
         const proyectado = datosProyectados[i];
         const real = datosReales[i];
@@ -276,11 +375,11 @@ function crearPanelGraficos(hectareasPorZona) {
         
         const anchoProyectado = Math.min(95, (proyectado / maxValor * 95));
         const anchoReal = Math.min(95, (real / maxValor * 95));
-        
         const colorReal = diferencia >= 0 ? '#2196F3' : '#f44336';
         const colorDiferencia = diferencia >= 0 ? '#4CAF50' : '#f44336';
         const iconoDiferencia = diferencia >= 0 ? '↗️' : '↘️';
         
+        // Gráfico de barras
         barrasHTML += `
             <div style="margin-bottom: 10px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -317,14 +416,24 @@ function crearPanelGraficos(hectareasPorZona) {
                 </div>
             </div>
         `;
+        
+        // Tabla
+        tablaHTML += `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px; font-weight: bold;">Zona ${zona}</td>
+                <td style="padding: 10px; text-align: right;">${proyectado.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</td>
+                <td style="padding: 10px; text-align: right; font-weight: bold;">${real.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</td>
+                <td style="padding: 10px; text-align: right; color: ${colorDiferencia}; font-weight: bold;">
+                    ${diferencia > 0 ? '+' : ''}${diferencia.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                </td>
+                <td style="padding: 10px; text-align: right; color: ${colorDiferencia};">
+                    ${porcentaje > 0 ? '+' : ''}${porcentaje.toFixed(1)}%
+                </td>
+            </tr>
+        `;
     });
     
-    // Calcular totales
-    const totalProyectado = datosProyectados.reduce((a, b) => a + b, 0);
-    const totalReal = datosReales.reduce((a, b) => a + b, 0);
-    const totalDiferencia = totalReal - totalProyectado;
-    const totalPorcentaje = totalProyectado > 0 ? (totalDiferencia / totalProyectado * 100) : 0;
-    
+    // HTML completo del panel
     panelDiv.innerHTML = `
         <div style="position: sticky; top: 0; background-color: #2E7D32; color: white; padding: 15px 20px; border-top-left-radius: 15px; border-top-right-radius: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
             <div style="font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 10px;">
@@ -335,6 +444,7 @@ function crearPanelGraficos(hectareasPorZona) {
         </div>
         
         <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
+            <!-- RESUMEN -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #2E7D32;">
                     <div style="font-size: 12px; color: #666; margin-bottom: 5px;">TOTAL PROYECTADO</div>
@@ -346,44 +456,66 @@ function crearPanelGraficos(hectareasPorZona) {
                 </div>
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800;">
                     <div style="font-size: 12px; color: #666; margin-bottom: 5px;">DIFERENCIA TOTAL</div>
-                    <div style="font-size: 22px; font-weight: bold; color: ${totalDiferencia >= 0 ? '#4CAF50' : 'red'};">${totalDiferencia.toLocaleString('es-AR', { maximumFractionDigits: 0, signDisplay: 'always' })} ha</div>
+                    <div style="font-size: 22px; font-weight: bold; color: ${totalDiferencia >= 0 ? '#4CAF50' : '#f44336'};">${totalDiferencia > 0 ? '+' : ''}${totalDiferencia.toLocaleString('es-AR', { maximumFractionDigits: 0 })} ha</div>
                 </div>
                 <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #9C27B0;">
                     <div style="font-size: 12px; color: #666; margin-bottom: 5px;">% DE CUMPLIMIENTO</div>
-                    <div style="font-size: 22px; font-weight: bold; color: ${totalPorcentaje >= 0 ? '#4CAF50' : 'red'};">${totalPorcentaje.toFixed(1)}%</div>
+                    <div style="font-size: 22px; font-weight: bold; color: ${totalPorcentaje >= 0 ? '#4CAF50' : '#f44336'};">${totalPorcentaje.toFixed(1)}%</div>
                 </div>
             </div>
             
+            <!-- GRÁFICO DE BARRAS -->
             <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                 <h3 style="margin-top: 0; margin-bottom: 20px; color: #333; font-size: 16px; border-bottom: 2px solid #2E7D32; padding-bottom: 8px;">HECTÁREAS POR ZONA - COMPARACIÓN</h3>
                 <div style="display: flex; flex-direction: column; gap: 20px;">${barrasHTML}</div>
+            </div>
+            
+            <!-- TABLA RESUMEN -->
+            <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0; margin-bottom: 15px; color: #333; font-size: 16px;">RESUMEN</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background-color: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #2E7D32;">ZONA</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">PROYECTADO (ha)</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">ACTUAL (ha)</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">DIFERENCIA (ha)</th>
+                                <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">% VARIACIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tablaHTML}</tbody>
+                        <tfoot style="background-color: #f9f9f9; font-weight: bold;">
+                            <tr>
+                                <td style="padding: 10px; border-top: 2px solid #2E7D32;">TOTAL</td>
+                                <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32;">${totalProyectado.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</td>
+                                <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32;">${totalReal.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</td>
+                                <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32; color: ${totalDiferencia >= 0 ? '#4CAF50' : '#f44336'};">${totalDiferencia > 0 ? '+' : ''}${totalDiferencia.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</td>
+                                <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32; color: ${totalPorcentaje >= 0 ? '#4CAF50' : '#f44336'};">${totalPorcentaje > 0 ? '+' : ''}${totalPorcentaje.toFixed(1)}%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- INFORMACIÓN -->
+            <div style="font-size: 12px; color: #666; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #FF9800;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span>💡</span>
+                    <strong>Información para el análisis:</strong>
+                </div>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>Datos proyectados: valores estimados para la campaña 25/26</li>
+                    <li>Datos actuales: calculados automáticamente del archivo GeoJSON cargado</li>
+                    <li>Verde (↑): la zona supera la proyección</li>
+                    <li>Rojo (↓): la zona está por debajo de la proyección</li>
+                </ul>
             </div>
         </div>
     `;
 }
 
-// 6. TOGGLE PANEL GRÁFICOS
-let panelAbierto = false;
-function togglePanelGraficos() {
-    const panel = document.getElementById('panelGraficos');
-    const btn = document.getElementById('btnGraficos');
-    
-    if (panelAbierto) {
-        panel.style.bottom = '-85%';
-        panel.style.zIndex = '9998';
-        btn.innerHTML = '📊';
-        btn.style.backgroundColor = '#2E7D32';
-    } else {
-        panel.style.zIndex = '10001';
-        panel.style.bottom = '0';
-        panel.style.display = 'block';
-        btn.innerHTML = '📈';
-        btn.style.backgroundColor = '#2196F3';
-    }
-    panelAbierto = !panelAbierto;
-}
-
-// 7. FUNCIÓN AUXILIAR: OBTENER COLOR POR CULTIVO
+// 6. FUNCIÓN AUXILIAR: OBTENER COLOR POR CULTIVO
 function obtenerColorPorCultivo(cultivo) {
     if (!cultivo) return '#9C27B0';
     
@@ -404,4 +536,13 @@ function obtenerColorPorCultivo(cultivo) {
     } else {
         return '#9C27B0';
     }
+}
+
+// 7. EXPORTAR FUNCIONES AL SCOPE GLOBAL
+// (Esto es necesario para que funcionen los onclick en los botones)
+if (typeof window !== 'undefined') {
+    window.filtrarCliente = filtrarCliente;
+    window.resetearFiltro = resetearFiltro;
+    window.ocultarLeyendaPrecip = ocultarLeyendaPrecip;
+    window.togglePanelGraficos = togglePanelGraficos;
 }
