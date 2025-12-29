@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROGRAMA CÓRDOBA 25/26 - Datos Actualizados Automáticamente</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 1;
+        }
+        
+        /* TÍTULO SUPERIOR */
+        #tituloApp {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #2E7D32;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            max-width: 280px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        #tituloApp h1 {
+            color: #2E7D32;
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #infoCarga {
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+            margin-top: 6px;
+        }
+        
+        /* PANEL DE CARGA */
+        #cargandoPanel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 30px;
+            border-radius: 10px;
+            border: 3px solid #2E7D32;
+            z-index: 2000;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            min-width: 300px;
+        }
+        
+        #cargandoPanel h2 {
+            color: #2E7D32;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2E7D32;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* BOTÓN GRÁFICOS */
+        #btnGraficos {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #2E7D32;
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            font-size: 26px;
+            transition: all 0.3s;
+        }
+        
+        #btnGraficos:hover {
+            background-color: #2196F3;
+            transform: scale(1.1);
+        }
+        
+        /* BUSCADOR */
+        #buscadorClientes {
+            position: fixed;
+            top: 100px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 2px solid #1E88E5;
+            z-index: 999;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 240px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            display: none; /* Inicialmente oculto hasta que carguen datos */
+        }
+        
+        /* LEYENDA PRECIPITACIÓN */
+        #leyendaPrecip {
+            position: fixed;
+            bottom: 40px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 2px solid #1E88E5;
+            z-index: 999;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            width: 150px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* LEYENDA CULTIVOS */
+        #leyendaCultivos {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            z-index: 999;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            width: 180px;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            display: none; /* Inicialmente oculto */
+        }
+        
+        /* PANEL GRÁFICOS */
+        #panelGraficos {
+            position: fixed;
+            bottom: -85%;
+            left: 0;
+            width: 100%;
+            height: 85%;
+            background-color: white;
+            z-index: 10001;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.3);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            transition: bottom 0.4s ease;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+            display: none; /* Inicialmente oculto */
+        }
+        
+        /* BOTÓN ACTUALIZAR */
+        #btnActualizar {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        #btnActualizar:hover {
+            background-color: #1976D2;
+        }
+        
+        /* MENSAJES DE ERROR */
+        #mensajeError {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 20px 30px;
+            border-radius: 8px;
+            border: 2px solid #c62828;
+            z-index: 2000;
+            text-align: center;
+            max-width: 400px;
+            display: none;
+        }
+        
+        .color-box {
+            width: 12px;
+            height: 12px;
+            display: inline-block;
+            margin-right: 6px;
+            border: 1px solid #333;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- MAPA -->
+    <div id="map"></div>
+    
+    <!-- TÍTULO APP -->
+    <div id="tituloApp">
+        <h1>🌽 PROGRAMA CÓRDOBA 25/26</h1>
+        <div id="infoCarga">
+            <div>🔄 <span id="estadoCarga">Cargando datos...</span></div>
+            <div>📅 <span id="fechaActualizacion">Última actualización: --/--/-- --:--</span></div>
+            <div>📍 <span id="contadorPoligonos">0 polígonos</span></div>
+        </div>
+    </div>
+    
+    <!-- PANEL DE CARGA -->
+    <div id="cargandoPanel">
+        <div class="spinner"></div>
+        <h2>Cargando datos actualizados</h2>
+        <p>Obteniendo información desde GitHub...</p>
+        <div id="progresoCarga" style="margin-top: 15px; font-size: 12px; color: #666;">
+            Iniciando descarga...
+        </div>
+    </div>
+    
+    <!-- BOTÓN ACTUALIZAR -->
+    <button id="btnActualizar" onclick="actualizarDatos()">
+        🔄 Actualizar datos
+    </button>
+    
+    <!-- BOTÓN GRÁFICOS -->
+    <div id="btnGraficos" onclick="togglePanelGraficos()">
+        📊
+    </div>
+    
+    <!-- BUSCADOR CLIENTES -->
+    <div id="buscadorClientes">
+        <!-- Se llenará con JavaScript -->
+    </div>
+    
+    <!-- LEYENDA PRECIPITACIÓN -->
+    <div id="leyendaPrecip">
+        <!-- Se llenará con JavaScript -->
+    </div>
+    
+    <!-- LEYENDA CULTIVOS -->
+    <div id="leyendaCultivos">
+        <!-- Se llenará con JavaScript -->
+    </div>
+    
+    <!-- PANEL GRÁFICOS -->
+    <div id="panelGraficos">
+        <!-- Se llenará con JavaScript -->
+    </div>
+    
+    <!-- MENSAJE ERROR -->
+    <div id="mensajeError">
+        <!-- Se llenará con JavaScript -->
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Folium necesita estas dependencias -->
+    <script src="https://unpkg.com/leaflet.fullscreen@2.0.0/Control.FullScreen.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@2.0.0/Control.FullScreen.css" />
+    
+    <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
+    
+    <!-- Código principal de la aplicación -->
+    <script>
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        let map;
+        let geoLayer;
+        let geojsonData = null;
+        let campoCliente = null;
+        let campoCultivo = null;
+        let campoHectareas = null;
+        let campoZona = null;
+        let boundsGeneral = null;
+        
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        const GEOJSON_URL = 'https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/datos_actualizados.geojson';
+        const HECTAREAS_PROYECTADAS = {
+            "1": 84940,
+            "2": 155256,
+            "3": 158675,
+            "4": 134574
+        };
+        
+        // ============================================
+        // FUNCIONES PRINCIPALES
+        // ============================================
+        
+        // 1. INICIALIZAR MAPA
+        function inicializarMapa() {
+            console.log('🗺️ Inicializando mapa...');
+            
+            // Centro de Córdoba
+            const center = [-31.4201, -64.1888];
+            
+            // Crear mapa
+            map = L.map('map', {
+                center: center,
+                zoom: 11,
+                controlScale: true,
+                zoomControl: true
+            });
+            
+            // Agregar capas base
+            L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                attribution: 'Google',
+                name: '🌍 Google Satélite',
+                maxZoom: 20
+            }).addTo(map);
+            
+            L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                attribution: 'Google',
+                name: '🗺️ Google Híbrido',
+                maxZoom: 20
+            }).addTo(map);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© CartoDB',
+                name: '🌙 Modo oscuro',
+                maxZoom: 20
+            }).addTo(map);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                name: '🌐 OpenStreetMap',
+                maxZoom: 20
+            }).addTo(map);
+            
+            // Agregar controles
+            L.control.layers({}, {}, {
+                position: 'topright',
+                collapsed: true
+            }).addTo(map);
+            
+            // Control pantalla completa
+            L.control.fullscreen({
+                position: 'topright',
+                title: 'Pantalla completa',
+                titleCancel: 'Salir pantalla completa'
+            }).addTo(map);
+            
+            // Control de medidas
+            L.control.measure({
+                position: 'topright',
+                primaryLengthUnit: 'kilometers',
+                secondaryLengthUnit: 'meters',
+                primaryAreaUnit: 'hectares',
+                secondaryAreaUnit: 'sqmeters'
+            }).addTo(map);
+            
+            console.log('✅ Mapa inicializado');
+        }
+        
+        // 2. CARGAR DATOS DESDE GITHUB
+        async function cargarDatosDesdeGitHub() {
+            console.log('📡 Cargando datos desde GitHub...');
+            
+            try {
+                actualizarEstadoCarga('Descargando GeoJSON...');
+                
+                const response = await fetch(GEOJSON_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                geojsonData = data;
+                
+                actualizarEstadoCarga('Procesando datos...');
+                
+                console.log('✅ Datos cargados:', data);
+                
+                // Procesar datos
+                procesarDatos(data);
+                
+                // Ocultar panel de carga
+                document.getElementById('cargandoPanel').style.display = 'none';
+                
+                // Mostrar elementos de la app
+                document.getElementById('buscadorClientes').style.display = 'block';
+                document.getElementById('leyendaCultivos').style.display = 'block';
+                document.getElementById('btnGraficos').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('❌ Error cargando datos:', error);
+                mostrarError(`Error al cargar datos: ${error.message}`);
+            }
+        }
+        
+        // 3. PROCESAR DATOS Y CREAR MAPA
+        function procesarDatos(data) {
+            console.log('🔄 Procesando datos...');
+            
+            if (!data || !data.features || data.features.length === 0) {
+                mostrarError('No hay datos para mostrar');
+                return;
+            }
+            
+            // Encontrar campos automáticamente
+            encontrarCamposClave(data.features[0].properties);
+            
+            // Contar polígonos
+            const numPoligonos = data.features.length;
+            actualizarContadorPoligonos(numPoligonos);
+            
+            // Calcular estadísticas
+            const estadisticas = calcularEstadisticas(data);
+            
+            // Crear capa GeoJSON
+            crearCapaGeoJSON(data);
+            
+            // Crear leyenda de cultivos
+            crearLeyendaCultivos(estadisticas.superficiePorCultivo, estadisticas.totalSuperficie);
+            
+            // Crear buscador de clientes
+            if (campoCliente) {
+                crearBuscadorClientes(estadisticas.clientesUnicos);
+            }
+            
+            // Crear leyenda de precipitación
+            crearLeyendaPrecipitacion();
+            
+            // Crear panel de gráficos
+            crearPanelGraficos(estadisticas.hectareasPorZona);
+            
+            // Actualizar fecha de última actualización
+            actualizarFechaActualizacion();
+            
+            console.log('✅ Datos procesados');
+        }
+        
+        // 4. ENCONTRAR CAMPOS CLAVE
+        function encontrarCamposClave(propiedades) {
+            // Buscar campo cliente
+            const posiblesClientes = ['CLIENTE', 'cliente', 'Cliente', 'NOMBRE_CLIENTE'];
+            for (const campo of posiblesClientes) {
+                if (propiedades[campo] !== undefined) {
+                    campoCliente = campo;
+                    break;
+                }
+            }
+            
+            // Buscar campo cultivo
+            const posiblesCultivos = ['CULTIVO', 'cultivo', 'Cultivo', 'CROP', 'crop'];
+            for (const campo of posiblesCultivos) {
+                if (propiedades[campo] !== undefined) {
+                    campoCultivo = campo;
+                    break;
+                }
+            }
+            
+            // Buscar campo hectáreas
+            const posiblesHectareas = ['HECTAREAS_ASEGURADAS', 'HECTAREAS_DECLARADAS', 'hectareas', 'HECTAREAS', 'HAS', 'has'];
+            for (const campo of posiblesHectareas) {
+                if (propiedades[campo] !== undefined) {
+                    campoHectareas = campo;
+                    break;
+                }
+            }
+            
+            // Buscar campo zona
+            const posiblesZonas = ['ZONA_CZ4', 'ZONA', 'Zona', 'zona', 'CZ4'];
+            for (const campo of posiblesZonas) {
+                if (propiedades[campo] !== undefined) {
+                    campoZona = campo;
+                    break;
+                }
+            }
+            
+            console.log('🔍 Campos encontrados:', {
+                cliente: campoCliente,
+                cultivo: campoCultivo,
+                hectareas: campoHectareas,
+                zona: campoZona
+            });
+        }
+        
+        // 5. CALCULAR ESTADÍSTICAS
+        function calcularEstadisticas(data) {
+            const estadisticas = {
+                superficiePorCultivo: {},
+                totalSuperficie: 0,
+                hectareasPorZona: {},
+                clientesUnicos: new Set()
+            };
+            
+            // Calcular superficie por cultivo
+            if (campoCultivo && campoHectareas) {
+                data.features.forEach(feature => {
+                    const cultivo = feature.properties[campoCultivo];
+                    const hectareas = parseFloat(feature.properties[campoHectareas]) || 0;
+                    
+                    if (cultivo) {
+                        if (!estadisticas.superficiePorCultivo[cultivo]) {
+                            estadisticas.superficiePorCultivo[cultivo] = 0;
+                        }
+                        estadisticas.superficiePorCultivo[cultivo] += hectareas;
+                        estadisticas.totalSuperficie += hectareas;
+                    }
+                });
+            }
+            
+            // Calcular hectáreas por zona
+            if (campoZona && campoHectareas) {
+                data.features.forEach(feature => {
+                    const zona = String(feature.properties[campoZona] || '').trim();
+                    const hectareas = parseFloat(feature.properties[campoHectareas]) || 0;
+                    
+                    if (zona) {
+                        if (!estadisticas.hectareasPorZona[zona]) {
+                            estadisticas.hectareasPorZona[zona] = 0;
+                        }
+                        estadisticas.hectareasPorZona[zona] += hectareas;
+                    }
+                });
+            }
+            
+            // Obtener clientes únicos
+            if (campoCliente) {
+                data.features.forEach(feature => {
+                    const cliente = feature.properties[campoCliente];
+                    if (cliente) {
+                        estadisticas.clientesUnicos.add(String(cliente).trim());
+                    }
+                });
+            }
+            
+            return estadisticas;
+        }
+        
+        // 6. CREAR CAPA GEOJSON
+        function crearCapaGeoJSON(data) {
+            // Función de estilo por cultivo
+            function estiloPorCultivo(feature) {
+                let colorRelleno = '#9C27B0';
+                let colorBorde = '#7B1FA2';
+                
+                if (campoCultivo && feature.properties[campoCultivo]) {
+                    const cultivo = String(feature.properties[campoCultivo]).toLowerCase();
+                    
+                    if (cultivo.includes('soja') || cultivo.includes('soya')) {
+                        colorRelleno = '#4CAF50';
+                        colorBorde = '#2E7D32';
+                    } else if (cultivo.includes('maíz') || cultivo.includes('maiz') || cultivo.includes('corn')) {
+                        colorRelleno = '#FFC107';
+                        colorBorde = '#FF8F00';
+                    } else if (cultivo.includes('trigo') || cultivo.includes('wheat')) {
+                        colorRelleno = '#795548';
+                        colorBorde = '#5D4037';
+                    } else if (cultivo.includes('girasol') || cultivo.includes('sunflower')) {
+                        colorRelleno = '#FF9800';
+                        colorBorde = '#EF6C00';
+                    } else if (cultivo.includes('algodón') || cultivo.includes('algodon') || cultivo.includes('cotton')) {
+                        colorRelleno = '#2196F3';
+                        colorBorde = '#1976D2';
+                    } else if (cultivo.includes('sorgo') || cultivo.includes('sorghum')) {
+                        colorRelleno = '#E91E63';
+                        colorBorde = '#C2185B';
+                    }
+                }
+                
+                // Guardar colores en propiedades
+                feature.properties._color_fill = colorRelleno;
+                feature.properties._color_border = colorBorde;
+                
+                return {
+                    fillColor: colorRelleno,
+                    color: colorBorde,
+                    weight: 2,
+                    fillOpacity: 0.6,
+                    dashArray: '5, 5'
+                };
+            }
+            
+            // Función highlight
+            function highlightFeature(e) {
+                const layer = e.target;
+                layer.setStyle({
+                    fillColor: '#FF5722',
+                    color: '#D84315',
+                    weight: 3,
+                    fillOpacity: 0.8,
+                    dashArray: '5, 5'
+                });
+            }
+            
+            function resetHighlight(e) {
+                geoLayer.resetStyle(e.target);
+            }
+            
+            // Crear capa
+            geoLayer = L.geoJSON(data, {
+                style: estiloPorCultivo,
+                onEachFeature: function(feature, layer) {
+                    // Tooltip
+                    if (campoCliente && feature.properties[campoCliente]) {
+                        layer.bindTooltip(feature.properties[campoCliente], {
+                            sticky: true
+                        });
+                    }
+                    
+                    // Popup
+                    const popupContent = crearContenidoPopup(feature.properties);
+                    layer.bindPopup(popupContent);
+                    
+                    // Eventos
+                    layer.on({
+                        mouseover: highlightFeature,
+                        mouseout: resetHighlight
+                    });
+                }
+            }).addTo(map);
+            
+            // Guardar bounds
+            boundsGeneral = geoLayer.getBounds();
+            if (boundsGeneral.isValid()) {
+                map.fitBounds(boundsGeneral);
+            }
+            
+            console.log('✅ Capa GeoJSON creada');
+        }
+        
+        // 7. CREAR CONTENIDO POPUP
+        function crearContenidoPopup(propiedades) {
+            let contenido = '<div style="font-family: Arial; font-size: 12px; max-width: 300px;">';
+            
+            // Campos importantes
+            const camposImportantes = [
+                'CUIT', 'CLIENTE', 'CAMPO', 'DEPARTAMENTO', 'LOCALIDAD', 
+                'CULTIVO', 'LOTE', 'CULTIVO_ANTERIOR', 'RENDIMIENTO_ANTERIOR',
+                'HECTAREAS_DECLARADAS', 'HECTAREAS_ASEGURADAS', 'PORCENTAJE_ASEGURADO',
+                'ZONA_CZ4', 'RENDIMIENTO_ASEGURADO', 'SUMA_ASEGURADA'
+            ];
+            
+            camposImportantes.forEach(campo => {
+                if (propiedades[campo] !== undefined && propiedades[campo] !== null && propiedades[campo] !== '') {
+                    contenido += `<div><b>${campo}:</b> ${propiedades[campo]}</div>`;
+                }
+            });
+            
+            contenido += '</div>';
+            return contenido;
+        }
+        
+        // 8. ACTUALIZAR INTERFAZ
+        function actualizarEstadoCarga(mensaje) {
+            document.getElementById('estadoCarga').textContent = mensaje;
+            document.getElementById('progresoCarga').textContent = mensaje;
+        }
+        
+        function actualizarContadorPoligonos(num) {
+            document.getElementById('contadorPoligonos').textContent = `${num.toLocaleString()} polígonos`;
+        }
+        
+        function actualizarFechaActualizacion() {
+            const ahora = new Date();
+            const fechaStr = ahora.toLocaleDateString('es-AR');
+            const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('fechaActualizacion').textContent = `Última actualización: ${fechaStr} ${horaStr}`;
+        }
+        
+        // 9. FUNCIONES AUXILIARES
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('mensajeError');
+            errorDiv.innerHTML = `
+                <h3>❌ Error</h3>
+                <p>${mensaje}</p>
+                <button onclick="location.reload()" style="margin-top: 10px; padding: 5px 15px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                    Reintentar
+                </button>
+            `;
+            errorDiv.style.display = 'block';
+            document.getElementById('cargandoPanel').style.display = 'none';
+        }
+        
+        function actualizarDatos() {
+            document.getElementById('btnActualizar').innerHTML = '🔄 Actualizando...';
+            document.getElementById('cargandoPanel').style.display = 'block';
+            location.reload();
+        }
+        
+        // ============================================
+        // INICIALIZAR APLICACIÓN
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Iniciando aplicación...');
+            
+            // Inicializar mapa
+            inicializarMapa();
+            
+            // Cargar datos
+            cargarDatosDesdeGitHub();
+            
+            // Configurar auto-actualización cada 5 minutos
+            setInterval(actualizarDatos, 5 * 60 * 1000);
+        });
+        
+        // ============================================
+        // NOTA: Las funciones crearLeyendaCultivos, crearBuscadorClientes, 
+        // crearLeyendaPrecipitacion, crearPanelGraficos y togglePanelGraficos
+        // son largas y están en el siguiente archivo.
+        // ============================================
+    </script>
+    
+    <!-- Cargar funciones adicionales -->
+    <script src="https://cdn.jsdelivr.net/gh/franciscotomatis/APP-C-rdoba@main/funciones-adicionales.js"></script>
+    
+</body>
+</html>
