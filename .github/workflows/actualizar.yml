@@ -43,82 +43,60 @@ jobs:
         echo "🚀 Iniciando descarga automática..."
         python script_geojson.py
         
-    # 5. Verificar archivos
-    - name: Verificar archivos existentes
-      run: |
-        echo "📁 Archivos actuales:"
-        ls -la
-        
-    # 6. Generar aplicación web
+    # 5. Generar aplicación web
     - name: Generar aplicación web
       run: |
         echo "🛠️ Generando aplicación web..."
         python generar_visor.py
         
-    # 7. Listar TODOS los archivos después de generar
-    - name: Listar archivos generados
+    # 6. Renombrar a index.html (SIEMPRE)
+    - name: Renombrar HTML a index.html
       run: |
-        echo "📁 TODOS los archivos después de generar:"
-        ls -la
+        echo "📁 Buscando archivos HTML..."
+        ls -la *.html 2>/dev/null || echo "No hay HTML todavía"
         
-        echo "📁 Archivos HTML específicamente:"
-        ls -la *.html 2>/dev/null || echo "No hay archivos HTML"
-        
-        echo "📁 Archivos que contienen 'visor':"
-        ls -la *visor* 2>/dev/null || echo "No hay archivos con 'visor'"
-        
-    # 8. Renombrar a index.html (si se generó algún HTML)
-    - name: Preparar index.html
-      run: |
-        # Buscar cualquier archivo HTML
-        HTML_FILE=$(ls -t *.html 2>/dev/null | head -1)
-        
-        if [ -n "$HTML_FILE" ] && [ -f "$HTML_FILE" ]; then
-          echo "✅ HTML encontrado: $HTML_FILE"
-          cp "$HTML_FILE" "index.html"
-          echo "📄 index.html creado desde $HTML_FILE"
+        # SI existe app_generada.html, renombrarlo
+        if [ -f "app_generada.html" ]; then
+          echo "✅ Encontrado: app_generada.html"
+          cp app_generada.html index.html
+          echo "📄 index.html creado (copia de app_generada.html)"
         else
-          # Si no hay HTML, crear uno básico de error
-          echo "⚠️ No se encontró HTML, creando placeholder"
-          cat > index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>Error - Aplicación Multiriesgo</title>
-          </head>
-          <body>
-              <h1>⚠️ Error generando la aplicación</h1>
-              <p>El proceso automático no pudo generar la aplicación web.</p>
-              <p>Por favor, revisa los logs en GitHub Actions.</p>
-          </body>
-          </html>
-          EOF
+          echo "❌ ERROR: No se encontró app_generada.html"
+          echo "📁 Listando todos los archivos para debug:"
+          ls -la
+          exit 1
         fi
         
-    # 9. Configurar git
+    # 7. Configurar git
     - name: Configurar git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-    # 10. Subir al repositorio
+    # 8. Subir al repositorio
     - name: Subir archivos al repositorio
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Agregar archivos
-        git add index.html poligonos.geojson 2>/dev/null || true
+        echo "📤 Subiendo archivos al repositorio..."
         
-        # Verificar cambios
-        if ! git diff --staged --quiet; then
+        # Agregar archivos específicos
+        git add index.html 2>/dev/null || true
+        git add poligonos.geojson 2>/dev/null || true
+        
+        # Verificar si hay cambios
+        if ! git diff --cached --quiet; then
+          echo "📝 Haciendo commit..."
           git commit -m "📱 Actualización automática: $(date '+%Y-%m-%d %H:%M')"
+          
+          echo "⬆️ Subiendo cambios..."
           git push
-          echo "✅ Cambios subidos al repositorio"
+          echo "✅ Cambios subidos exitosamente"
         else
           echo "⚠️ No hay cambios para commitear"
         fi
         
-    # 11. Subir como artifact
+    # 9. Subir como artifact (opcional)
     - name: Subir como artifact
       uses: actions/upload-artifact@v4
       with:
