@@ -28,75 +28,129 @@
             z-index: 1;
         }
         
+        /* PANTALLA DE LOGIN */
+        #loginScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            transition: opacity 0.5s ease;
+        }
+        
+        .login-box {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 3px solid #2E7D32;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .login-icon {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #2E7D32;
+        }
+        
+        .login-title {
+            color: #2E7D32;
+            margin-bottom: 10px;
+        }
+        
+        .login-subtitle {
+            color: #000000;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .login-input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .login-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .login-button {
+            background-color: #2E7D32;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .login-button:hover {
+            background-color: #1B5E20;
+        }
+        
+        .login-error {
+            margin-top: 15px;
+            color: #f44336;
+            font-size: 13px;
+            font-weight: bold;
+            display: none;
+        }
+        
         /* TÍTULO SUPERIOR */
         #tituloApp {
             position: fixed;
             top: 10px;
             left: 10px;
-            background-color: rgba(255, 255, 255, 0.98);
-            padding: 10px 15px;
-            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 6px;
             border: 2px solid #2E7D32;
             z-index: 1000;
             font-family: Arial, sans-serif;
-            font-size: 13px;
-            max-width: 280px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 12px;
+            max-width: 250px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            display: none; /* Oculto hasta login */
         }
         
-        #tituloApp h1 {
-            color: #2E7D32;
-            font-size: 18px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        #infoCarga {
-            font-size: 11px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 6px;
-            margin-top: 6px;
-        }
-        
-        /* PANEL DE CARGA */
-        #cargandoPanel {
+        /* BOTÓN ACTUALIZAR */
+        #btnActualizar {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 25px 30px;
-            border-radius: 10px;
-            border: 3px solid #2E7D32;
-            z-index: 2000;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            top: 10px;
+            right: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
             font-family: Arial, sans-serif;
-            min-width: 300px;
-        }
-        
-        #cargandoPanel h2 {
-            color: #2E7D32;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2E7D32;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            font-size: 12px;
+            display: none; /* Oculto hasta login */
         }
         
         /* BOTÓN GRÁFICOS */
@@ -117,6 +171,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             font-size: 26px;
             transition: all 0.3s;
+            display: none; /* Oculto hasta login */
         }
         
         #btnGraficos:hover {
@@ -138,7 +193,7 @@
             font-size: 12px;
             width: 240px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-            display: none; /* Inicialmente oculto hasta que carguen datos */
+            display: none; /* Oculto hasta login */
         }
         
         /* LEYENDA PRECIPITACIÓN */
@@ -176,7 +231,7 @@
             max-height: 250px;
             overflow-y: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-            display: none; /* Inicialmente oculto */
+            display: none; /* Oculto hasta login */
         }
         
         /* PANEL GRÁFICOS */
@@ -194,34 +249,43 @@
             transition: bottom 0.4s ease;
             overflow-y: auto;
             font-family: Arial, sans-serif;
-            display: none; /* Inicialmente oculto */
+            display: none;
         }
         
-        /* BOTÓN ACTUALIZAR */
-        #btnActualizar {
+        /* PANEL DE CARGA */
+        #cargandoPanel {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 1000;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 30px;
+            border-radius: 10px;
+            border: 3px solid #2E7D32;
+            z-index: 2000;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            min-width: 300px;
+            display: none;
         }
         
-        #btnActualizar:hover {
-            background-color: #1976D2;
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2E7D32;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
         
-        /* MENSAJES DE ERROR */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* MENSAJE ERROR */
         #mensajeError {
             position: fixed;
             top: 50%;
@@ -246,9 +310,45 @@
             border: 1px solid #333;
             border-radius: 2px;
         }
+        
+        /* ANIMACIÓN SHAKE PARA LOGIN */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
+    <!-- PANTALLA DE LOGIN -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <div class="login-icon">🔐</div>
+            <h2 class="login-title">PROGRAMA CÓRDOBA 25/26</h2>
+            <p class="login-subtitle">Acceso restringido</p>
+            
+            <div class="login-input-group">
+                <label class="login-label">👤 Usuario</label>
+                <input type="text" id="loginUsuario" class="login-input" placeholder="Ingrese su usuario">
+            </div>
+            
+            <div class="login-input-group">
+                <label class="login-label">🔒 Contraseña</label>
+                <input type="password" id="loginContrasena" class="login-input" placeholder="Ingrese su contraseña">
+            </div>
+            
+            <button id="loginButton" class="login-button">🔓 INGRESAR AL SISTEMA</button>
+            
+            <div id="loginError" class="login-error">
+                ❌ Usuario o contraseña incorrectos
+            </div>
+            
+            <div style="margin-top: 25px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 15px;">
+                Programa Córdoba 25/26
+            </div>
+        </div>
+    </div>
+    
     <!-- MAPA -->
     <div id="map"></div>
     
@@ -256,19 +356,9 @@
     <div id="tituloApp">
         <h1>🌽 PROGRAMA CÓRDOBA 25/26</h1>
         <div id="infoCarga">
-            <div>🔄 <span id="estadoCarga">Cargando datos...</span></div>
+            <div>🔄 <span id="estadoCarga">Esperando login...</span></div>
             <div>📅 <span id="fechaActualizacion">Última actualización: --/--/-- --:--</span></div>
             <div>📍 <span id="contadorPoligonos">0 polígonos</span></div>
-        </div>
-    </div>
-    
-    <!-- PANEL DE CARGA -->
-    <div id="cargandoPanel">
-        <div class="spinner"></div>
-        <h2>Cargando datos actualizados</h2>
-        <p>Obteniendo información desde GitHub...</p>
-        <div id="progresoCarga" style="margin-top: 15px; font-size: 12px; color: #666;">
-            Iniciando descarga...
         </div>
     </div>
     
@@ -276,6 +366,16 @@
     <button id="btnActualizar" onclick="actualizarDatos()">
         🔄 Actualizar datos
     </button>
+    
+    <!-- PANEL DE CARGA -->
+    <div id="cargandoPanel">
+        <div class="spinner"></div>
+        <h2>Cargando datos actualizados</h2>
+        <p>Conectando con GitHub...</p>
+        <div id="progresoCarga" style="margin-top: 15px; font-size: 12px; color: #666;">
+            Preparando descarga...
+        </div>
+    </div>
     
     <!-- BOTÓN GRÁFICOS -->
     <div id="btnGraficos" onclick="togglePanelGraficos()">
@@ -310,15 +410,28 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- Folium necesita estas dependencias -->
+    <!-- Dependencias Folium -->
     <script src="https://unpkg.com/leaflet.fullscreen@2.0.0/Control.FullScreen.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@2.0.0/Control.FullScreen.css" />
     
     <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
     
-    <!-- Código principal de la aplicación -->
+    <!-- Código principal -->
     <script>
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        const USUARIO_CORRECTO = "Sancor";
+        const CONTRASENA_CORRECTA = "2025Sancor";
+        const GEOJSON_URL = 'https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/datos_actualizados.geojson';
+        const HECTAREAS_PROYECTADAS = {
+            "1": 84940,
+            "2": 155256,
+            "3": 158675,
+            "4": 134574
+        };
+        
         // ============================================
         // VARIABLES GLOBALES
         // ============================================
@@ -330,23 +443,110 @@
         let campoHectareas = null;
         let campoZona = null;
         let boundsGeneral = null;
+        let panelGraficosAbierto = false;
         
         // ============================================
-        // CONFIGURACIÓN
-        // ============================================
-        const GEOJSON_URL = 'https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/datos_actualizados.geojson';
-        const HECTAREAS_PROYECTADAS = {
-            "1": 84940,
-            "2": 155256,
-            "3": 158675,
-            "4": 134574
-        };
-        
-        // ============================================
-        // FUNCIONES PRINCIPALES
+        // 1. SISTEMA DE LOGIN
         // ============================================
         
-        // 1. INICIALIZAR MAPA
+        function verificarLogin() {
+            const usuario = document.getElementById('loginUsuario').value.trim();
+            const contrasena = document.getElementById('loginContrasena').value.trim();
+            const errorDiv = document.getElementById('loginError');
+            
+            if (!usuario || !contrasena) {
+                errorDiv.textContent = '❌ Por favor, complete ambos campos';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (usuario === USUARIO_CORRECTO && contrasena === CONTRASENA_CORRECTA) {
+                // Login exitoso
+                errorDiv.style.display = 'none';
+                
+                // Animación de salida del login
+                const loginScreen = document.getElementById('loginScreen');
+                loginScreen.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    
+                    // Mostrar elementos de la app
+                    document.getElementById('tituloApp').style.display = 'block';
+                    document.getElementById('btnActualizar').style.display = 'block';
+                    document.getElementById('btnGraficos').style.display = 'flex';
+                    
+                    // Inicializar mapa
+                    inicializarMapa();
+                    
+                    // Cargar datos automáticamente
+                    cargarDatosDesdeGitHub();
+                    
+                }, 500);
+                
+            } else {
+                // Credenciales incorrectas
+                errorDiv.textContent = '❌ Usuario o contraseña incorrectos';
+                errorDiv.style.display = 'block';
+                document.getElementById('loginContrasena').value = '';
+                document.getElementById('loginContrasena').focus();
+                
+                // Animación de error
+                const loginBox = document.querySelector('.login-box');
+                loginBox.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    loginBox.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Configurar eventos de login
+        document.getElementById('loginButton').addEventListener('click', verificarLogin);
+        
+        document.getElementById('loginUsuario').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginContrasena').focus();
+            }
+        });
+        
+        document.getElementById('loginContrasena').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verificarLogin();
+            }
+        });
+        
+        // Verificar si ya hay sesión activa (7 días)
+        function verificarSesionActiva() {
+            const sesionValida = localStorage.getItem('sesion_valida');
+            const ultimoAcceso = localStorage.getItem('ultimo_acceso');
+            
+            if (sesionValida === 'true' && ultimoAcceso) {
+                const ultimaFecha = new Date(ultimoAcceso);
+                const ahora = new Date();
+                const diferenciaDias = (ahora - ultimaFecha) / (1000 * 60 * 60 * 24);
+                
+                if (diferenciaDias < 7) {
+                    // Sesión válida, saltar login
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('tituloApp').style.display = 'block';
+                    document.getElementById('btnActualizar').style.display = 'block';
+                    document.getElementById('btnGraficos').style.display = 'flex';
+                    
+                    inicializarMapa();
+                    cargarDatosDesdeGitHub();
+                    return true;
+                } else {
+                    // Sesión expirada
+                    localStorage.removeItem('sesion_valida');
+                    localStorage.removeItem('ultimo_acceso');
+                }
+            }
+            return false;
+        }
+        
+        // ============================================
+        // 2. INICIALIZAR MAPA
+        // ============================================
         function inicializarMapa() {
             console.log('🗺️ Inicializando mapa...');
             
@@ -361,7 +561,7 @@
                 zoomControl: true
             });
             
-            // Agregar capas base
+            // Agregar capas base (IGUAL QUE TU APP)
             L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
                 attribution: 'Google',
                 name: '🌍 Google Satélite',
@@ -386,7 +586,7 @@
                 maxZoom: 20
             }).addTo(map);
             
-            // Agregar controles
+            // Agregar controles (IGUAL QUE TU APP)
             L.control.layers({}, {}, {
                 position: 'topright',
                 collapsed: true
@@ -411,12 +611,19 @@
             console.log('✅ Mapa inicializado');
         }
         
-        // 2. CARGAR DATOS DESDE GITHUB
+        // ============================================
+        // 3. CARGAR DATOS DESDE GITHUB
+        // ============================================
         async function cargarDatosDesdeGitHub() {
             console.log('📡 Cargando datos desde GitHub...');
             
+            // Mostrar panel de carga
+            document.getElementById('cargandoPanel').style.display = 'block';
+            actualizarEstadoCarga('Conectando con GitHub...');
+            
             try {
-                actualizarEstadoCarga('Descargando GeoJSON...');
+                // Mostrar progreso
+                document.getElementById('progresoCarga').textContent = 'Descargando GeoJSON...';
                 
                 const response = await fetch(GEOJSON_URL);
                 
@@ -424,12 +631,15 @@
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
                 
+                document.getElementById('progresoCarga').textContent = 'Procesando datos...';
                 const data = await response.json();
                 geojsonData = data;
                 
-                actualizarEstadoCarga('Procesando datos...');
-                
                 console.log('✅ Datos cargados:', data);
+                
+                // Guardar sesión
+                localStorage.setItem('sesion_valida', 'true');
+                localStorage.setItem('ultimo_acceso', new Date().toISOString());
                 
                 // Procesar datos
                 procesarDatos(data);
@@ -437,21 +647,18 @@
                 // Ocultar panel de carga
                 document.getElementById('cargandoPanel').style.display = 'none';
                 
-                // Mostrar elementos de la app
-                document.getElementById('buscadorClientes').style.display = 'block';
-                document.getElementById('leyendaCultivos').style.display = 'block';
-                document.getElementById('btnGraficos').style.display = 'flex';
-                
             } catch (error) {
                 console.error('❌ Error cargando datos:', error);
                 mostrarError(`Error al cargar datos: ${error.message}`);
+                document.getElementById('cargandoPanel').style.display = 'none';
             }
         }
         
-        // 3. PROCESAR DATOS Y CREAR MAPA
+        // ============================================
+        // 4. FUNCIONES DE PROCESAMIENTO (SIMILARES A TU APP)
+        // ============================================
+        
         function procesarDatos(data) {
-            console.log('🔄 Procesando datos...');
-            
             if (!data || !data.features || data.features.length === 0) {
                 mostrarError('No hay datos para mostrar');
                 return;
@@ -490,7 +697,6 @@
             console.log('✅ Datos procesados');
         }
         
-        // 4. ENCONTRAR CAMPOS CLAVE
         function encontrarCamposClave(propiedades) {
             // Buscar campo cliente
             const posiblesClientes = ['CLIENTE', 'cliente', 'Cliente', 'NOMBRE_CLIENTE'];
@@ -527,16 +733,8 @@
                     break;
                 }
             }
-            
-            console.log('🔍 Campos encontrados:', {
-                cliente: campoCliente,
-                cultivo: campoCultivo,
-                hectareas: campoHectareas,
-                zona: campoZona
-            });
         }
         
-        // 5. CALCULAR ESTADÍSTICAS
         function calcularEstadisticas(data) {
             const estadisticas = {
                 superficiePorCultivo: {},
@@ -589,9 +787,8 @@
             return estadisticas;
         }
         
-        // 6. CREAR CAPA GEOJSON
         function crearCapaGeoJSON(data) {
-            // Función de estilo por cultivo
+            // Función de estilo por cultivo (IGUAL QUE TU APP)
             function estiloPorCultivo(feature) {
                 let colorRelleno = '#9C27B0';
                 let colorBorde = '#7B1FA2';
@@ -620,7 +817,6 @@
                     }
                 }
                 
-                // Guardar colores en propiedades
                 feature.properties._color_fill = colorRelleno;
                 feature.properties._color_border = colorBorde;
                 
@@ -656,13 +852,18 @@
                     // Tooltip
                     if (campoCliente && feature.properties[campoCliente]) {
                         layer.bindTooltip(feature.properties[campoCliente], {
-                            sticky: true
+                            sticky: true,
+                            className: 'leaflet-tooltip-custom'
                         });
                     }
                     
                     // Popup
                     const popupContent = crearContenidoPopup(feature.properties);
-                    layer.bindPopup(popupContent);
+                    layer.bindPopup(popupContent, {
+                        maxWidth: 350,
+                        maxHeight: 400,
+                        className: 'leaflet-popup-custom'
+                    });
                     
                     // Eventos
                     layer.on({
@@ -678,19 +879,20 @@
                 map.fitBounds(boundsGeneral);
             }
             
-            console.log('✅ Capa GeoJSON creada');
+            // Mostrar elementos de UI
+            document.getElementById('buscadorClientes').style.display = 'block';
+            document.getElementById('leyendaCultivos').style.display = 'block';
+            document.getElementById('leyendaPrecip').style.display = 'block';
         }
         
-        // 7. CREAR CONTENIDO POPUP
         function crearContenidoPopup(propiedades) {
             let contenido = '<div style="font-family: Arial; font-size: 12px; max-width: 300px;">';
             
-            // Campos importantes
             const camposImportantes = [
                 'CUIT', 'CLIENTE', 'CAMPO', 'DEPARTAMENTO', 'LOCALIDAD', 
                 'CULTIVO', 'LOTE', 'CULTIVO_ANTERIOR', 'RENDIMIENTO_ANTERIOR',
                 'HECTAREAS_DECLARADAS', 'HECTAREAS_ASEGURADAS', 'PORCENTAJE_ASEGURADO',
-                'ZONA_CZ4', 'RENDIMIENTO_ASEGURADO', 'SUMA_ASEGURADA'
+                'ZONA_CZ4', 'RENDIMIENTO_ASEGURADO', 'SUMA_ASEGURADA', 'FECHA_CREACION'
             ];
             
             camposImportantes.forEach(campo => {
@@ -703,10 +905,12 @@
             return contenido;
         }
         
-        // 8. ACTUALIZAR INTERFAZ
+        // ============================================
+        // 5. FUNCIONES DE INTERFAZ
+        // ============================================
+        
         function actualizarEstadoCarga(mensaje) {
             document.getElementById('estadoCarga').textContent = mensaje;
-            document.getElementById('progresoCarga').textContent = mensaje;
         }
         
         function actualizarContadorPoligonos(num) {
@@ -720,52 +924,76 @@
             document.getElementById('fechaActualizacion').textContent = `Última actualización: ${fechaStr} ${horaStr}`;
         }
         
-        // 9. FUNCIONES AUXILIARES
         function mostrarError(mensaje) {
             const errorDiv = document.getElementById('mensajeError');
             errorDiv.innerHTML = `
                 <h3>❌ Error</h3>
                 <p>${mensaje}</p>
-                <button onclick="location.reload()" style="margin-top: 10px; padding: 5px 15px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                <button onclick="cargarDatosDesdeGitHub()" style="margin-top: 10px; padding: 5px 15px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">
                     Reintentar
                 </button>
             `;
             errorDiv.style.display = 'block';
-            document.getElementById('cargandoPanel').style.display = 'none';
         }
         
         function actualizarDatos() {
             document.getElementById('btnActualizar').innerHTML = '🔄 Actualizando...';
-            document.getElementById('cargandoPanel').style.display = 'block';
-            location.reload();
+            cargarDatosDesdeGitHub();
+            setTimeout(() => {
+                document.getElementById('btnActualizar').innerHTML = '🔄 Actualizar datos';
+            }, 2000);
+        }
+        
+        function togglePanelGraficos() {
+            const panel = document.getElementById('panelGraficos');
+            const btn = document.getElementById('btnGraficos');
+            
+            if (panelGraficosAbierto) {
+                panel.style.bottom = '-85%';
+                panel.style.zIndex = '9998';
+                btn.innerHTML = '📊';
+                btn.style.backgroundColor = '#2E7D32';
+            } else {
+                panel.style.zIndex = '10001';
+                panel.style.bottom = '0';
+                panel.style.display = 'block';
+                btn.innerHTML = '📈';
+                btn.style.backgroundColor = '#2196F3';
+            }
+            panelGraficosAbierto = !panelGraficosAbierto;
         }
         
         // ============================================
-        // INICIALIZAR APLICACIÓN
+        // 6. INICIALIZAR APLICACIÓN
         // ============================================
-        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Iniciando aplicación...');
             
-            // Inicializar mapa
-            inicializarMapa();
+            // Verificar sesión activa
+            if (!verificarSesionActiva()) {
+                // Mostrar login si no hay sesión
+                document.getElementById('loginUsuario').focus();
+            }
             
-            // Cargar datos
-            cargarDatosDesdeGitHub();
-            
-            // Configurar auto-actualización cada 5 minutos
-            setInterval(actualizarDatos, 5 * 60 * 1000);
+            // Configurar auto-actualización cada 30 minutos
+            setInterval(() => {
+                if (document.getElementById('loginScreen').style.display === 'none') {
+                    actualizarDatos();
+                }
+            }, 30 * 60 * 1000);
         });
         
         // ============================================
-        // NOTA: Las funciones crearLeyendaCultivos, crearBuscadorClientes, 
-        // crearLeyendaPrecipitacion, crearPanelGraficos y togglePanelGraficos
-        // son largas y están en el siguiente archivo.
+        // 7. FUNCIONES PARA BUSCADOR, LEYENDAS Y GRÁFICOS
         // ============================================
+        
+        // Estas funciones son largas, las colocaré en un archivo separado
+        // para mantener el código organizado
+        
     </script>
     
-    <!-- Cargar funciones adicionales -->
-    <script src="https://cdn.jsdelivr.net/gh/franciscotomatis/APP-C-rdoba@main/funciones-adicionales.js"></script>
+    <!-- Cargar funciones adicionales desde tu repositorio -->
+    <script src="https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/funciones-adicionales.js"></script>
     
 </body>
 </html>
