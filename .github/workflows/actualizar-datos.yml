@@ -2,123 +2,91 @@ name: 🤖 Actualizar datos automáticamente
 
 on:
   schedule:
-    # Se ejecuta TODOS LOS DÍAS a las 8:00 AM (hora UTC-3 Argentina)
-    - cron: '0 11 * * *'   # 11:00 UTC = 8:00 AM Argentina (UTC-3)
-    
-  # También se puede ejecutar manualmente desde GitHub Actions
-  workflow_dispatch:
-
-# PERMISOS PARA QUE PUEDA HACER PUSH
-permissions:
-  contents: write  # ← ESTA LÍNEA ES CLAVE
+    - cron: '0 11 * * *'  # 8 AM Argentina (GMT-3) = 11 AM UTC
+  workflow_dispatch:  # Permite ejecución manual
 
 jobs:
   actualizar-datos:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout del repositorio
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        # Configurar el token para permisos de escritura
-        token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: 🐍 Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: 📦 Instalar dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: 🤖 Ejecutar script de descarga
-      env:
-        MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
-        MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
-      run: python scripts/descargar_csv.py
-    
-    - name: 🔄 Verificar archivo CSV
-      run: |
-        echo "🔄 Verificando archivo CSV..."
-        if [ -f "datos_actualizados.csv" ]; then
-          size=$(stat -f%z "datos_actualizados.csv" 2>/dev/null || stat -c%s "datos_actualizados.csv")
-          echo "✅ CSV encontrado, tamaño: $((size/1024/1024))M"
-        else
-          echo "❌ No se encontró datos_actualizados.csv"
-          exit 1
-        fi
-    
-    - name: 🗺️ Convertir CSV a GeoJSON
-      run: python convertir_csv_a_geojson.py
-    
-    - name: 📊 Verificar GeoJSON generado
-      run: |
-        echo "🔍 Verificando GeoJSON..."
-        if [ -f "datos_actualizados.geojson" ]; then
-          size=$(stat -f%z "datos_actualizados.geojson" 2>/dev/null || stat -c%s "datos_actualizados.geojson")
-          num_features=$(python -c "import json; f=open('datos_actualizados.geojson'); d=json.load(f); print(len(d['features']))" 2>/dev/null || echo "?")
-          echo "✅ GeoJSON generado: $((size/1024/1024))M, $num_features polígonos"
-        else
-          echo "❌ No se generó datos_actualizados.geojson"
-          exit 1
-        fi
-
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+      
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Instalar dependencias
+        run: |
+          pip install pandas geopandas selenium webdriver-manager requests
+      
+      - name: Ejecutar script de descarga
+        run: python scripts/descargar_csv.py
+      
+      - name: Verificar archivo CSV
+        run: |
+          echo "📊 Verificando CSV..."
+          ls -lh datos_agricolas.csv
+          echo "✅ CSV verificado"
+      
+      - name: Convertir CSV a GeoJSON
+        run: |
+          python -c "
+          import pandas as pd
+          import geopandas as gpd
+          from shapely import wkt
+          
+          print('📖 Leyendo CSV...')
+          df = pd.read_csv('datos_agricolas.csv', encoding='utf-8')
+          print(f'✅ CSV cargado: {len(df)} registros')
+          
+          # Convertir geometría WKT a shapely
+          print('🔄 Convirtiendo geometrías...')
+          df['geometry'] = df['WKT'].apply(wkt.loads)
+          gdf = gpd.GeoDataFrame(df, geometry='geometry', crs='EPSG:4326')
+          
+          # Guardar como GeoJSON
+          print('💾 Guardando GeoJSON...')
+          gdf.to_file('datos_actualizados.geojson', driver='GeoJSON')
+          print(f'✅ GeoJSON guardado: {len(gdf)} features')
+          "
+      
+      - name: Verificar GeoJSON generado
+        run: |
+          echo "📊 Verificando GeoJSON..."
+          ls -lh datos_actualizados.geojson
+          echo "✅ GeoJSON verificado"
+      
+      # 🟢🟢🟢🟢🟢 NUEVO PASO - PEGA AQUÍ 🟢🟢🟢🟢🟢
       - name: Inyectar credenciales en HTML
         run: |
           echo "🔐 Inyectando credenciales en index.html..."
           
-          # Verificar que index.html existe
           if [ ! -f "index.html" ]; then
             echo "❌ ERROR: index.html no encontrado"
             exit 1
           fi
           
-          # Reemplazar credenciales con tus Secrets
           sed -i "s/const APP_USERNAME = \".*\"/const APP_USERNAME = \"${{ secrets.MULTIRIESGO_USUARIO }}\"/g" index.html
           sed -i "s/const APP_PASSWORD = \".*\"/const APP_PASSWORD = \"${{ secrets.MULTIRIESGO_CONTRASENA }}\"/g" index.html
           
-          # Verificar que se reemplazó
           echo "✅ Credenciales inyectadas:"
           echo "   Usuario: ${{ secrets.MULTIRIESGO_USUARIO }}"
           echo "   Contraseña: [PROTEGIDA]"
-          
-          # Mostrar línea modificada (sin mostrar contraseña completa)
-          grep -n "const APP_USERNAME" index.html || echo "⚠️ No se encontró APP_USERNAME"
-          grep -n "const APP_PASSWORD" index.html | head -c 50 && echo "..."
-    
-    - name: 📤 Commit y push de cambios
-      run: |
-        echo "📝 Configurando Git..."
-        git config --global user.name "GitHub Actions Bot"
-        git config --global user.email "actions@github.com"
-        
-        echo "🔄 Agregando archivos..."
-        git add datos_actualizados.csv datos_actualizados.geojson
-        
-        echo "💾 Haciendo commit..."
-        # Solo hacer commit si hay cambios
-        if git diff --cached --quiet; then
-          echo "⚠️  No hay cambios para commit"
-        else
-          timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-          git commit -m "🤖 Actualización automática: $timestamp"
-          
-          echo "🚀 Haciendo push..."
+      # 🟢🟢🟢🟢🟢 FIN NUEVO PASO 🟢🟢🟢🟢🟢
+      
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add datos_actualizados.geojson index.html
+          git commit -m "🤖 Actualización automática de datos - $(date '+%Y-%m-%d %H:%M')"
           git push
-          echo "✅ Cambios subidos a GitHub"
-        fi
-    
-    - name: 📋 Resumen final
-      run: |
-        echo "========================================"
-        echo "✅ PROCESO COMPLETADO EXITOSAMENTE"
-        echo "========================================"
-        echo "📁 ARCHIVOS PRINCIPALES:"
-        echo "- datos_actualizados.csv"
-        echo "- datos_actualizados.geojson"
-        echo ""
-        echo "📅 Última actualización: $(date)"
-        echo "========================================"
+      
+      - name: Resumen final
+        run: |
+          echo "🎉 PROCESO COMPLETADO EXITOSAMENTE"
+          echo "📅 Última actualización: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "🌐 App disponible en: https://franciscotomatis.github.io/APP-C-rdoba/"
