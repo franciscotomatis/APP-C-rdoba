@@ -1,50 +1,92 @@
-name: Actualizar Datos y Visor
+name: Generar Aplicación Web Multiriesgo
 
 on:
-  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+  workflow_dispatch:  # Permite ejecución manual
   schedule:
-    - cron: '0 8 * * *' # Se ejecuta automáticamente todos los días (ej. 8 AM UTC)
+    # Ejecuta automáticamente todos los días a las 8 AM UTC (5 AM Argentina)
+    - cron: '0 8 * * *'
+  push:
+    branches: [ main ]
+    paths:
+      - 'script_geojson.py'
+      - 'generar_visor.py'
 
 jobs:
-  proceso-multiriesgo:
+  generar-app:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repositorio
-        uses: actions/checkout@v3
-
-      - name: Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Instalar Dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Instalar Navegador Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
-      - name: 🛠️ Paso 1 - Extracción Selenium (script_geojson.py)
-        env:
-          MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
-          MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
-        run: python script_geojson.py
-
-      - name: 🎨 Paso 2 - Generación del Visor (generar_visor.py)
-        env:
-          MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
-          MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
-        run: python generar_visor.py
-
-      - name: 🚀 Commit y Push de resultados
-        run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add poligonos.geojson index.html
-          # Solo hace commit si hubo cambios en los archivos
-          git diff --quiet && git diff --staged --quiet || git commit -m "Actualización automática: $(date +'%Y-%m-%d %H:%M')"
-          git push
+    # 1. Checkout del código
+    - name: Checkout código
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+        
+    # 2. Configurar Python
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    # 3. Instalar dependencias
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
+        pip install owslib branca streamlit-folium
+        
+    # 4. Ejecutar script de descarga (crea poligonos.geojson)
+    - name: Descargar datos de Multiriesgo
+      env:
+        MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+        MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
+      run: |
+        echo "🚀 Iniciando descarga automática..."
+        python script_geojson.py
+        
+    # 5. Verificar que se creó el geojson
+    - name: Verificar archivo geojson
+      run: |
+        if [ -f "poligonos.geojson" ]; then
+          echo "✅ poligonos.geojson creado correctamente"
+          ls -lh poligonos.geojson
+        else
+          echo "❌ ERROR: No se creó poligonos.geojson"
+          exit 1
+        fi
+        
+    # 6. Generar aplicación web
+    - name: Generar aplicación web
+      run: |
+        echo "🛠️ Generando aplicación web..."
+        python generar_visor.py
+        
+    # 7. Verificar archivos generados
+    - name: Listar archivos generados
+      run: |
+        echo "📁 Archivos en el repositorio:"
+        ls -la *.html *.geojson
+        
+    # 8. Subir archivo HTML generado (opcional)
+    - name: Subir archivo HTML
+      if: success()
+      run: |
+        # Buscar el archivo HTML más reciente
+        LATEST_HTML=$(ls -t visor_cultivos_*.html | head -1)
+        if [ -n "$LATEST_HTML" ]; then
+          echo "📤 Subiendo $LATEST_HTML"
+          echo "Este archivo contiene la aplicación web completa"
+        else
+          echo "⚠️ No se encontró archivo HTML generado"
+        fi
+        
+    # 9. Opcional: Subir como artifact para descargar
+    - name: Subir archivos como artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: aplicacion-web-multiriesgo
+        path: |
+          *.html
+          poligonos.geojson
+        retention-days: 7
