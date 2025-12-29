@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROGRAMA CÓRDOBA 25/26 - Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos básicos - Mantén tus estilos actuales */
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100vh; }
+        
+        /* Título (igual que tu código) */
+        .map-title {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #4CAF50;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            max-width: 200px;
+            min-width: 180px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Botón de actualización */
+        .update-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .update-button:hover {
+            background-color: #1976D2;
+        }
+        
+        /* Info de última actualización */
+        .update-info {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            z-index: 9999;
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Título -->
+    <div class="map-title">
+        <div style="font-weight: bold; color: #2E7D32; font-size: 14px; margin-bottom: 4px;">
+            PROGRAMA CÓRDOBA 25/26
+        </div>
+        <div style="margin-top: 4px; font-size: 9px; color: #555; border-top: 1px solid #e0e0e0; padding-top: 4px;">
+            <div><b>Última actualización:</b> <span id="lastUpdate">Cargando...</span></div>
+            <div><b>Polígonos:</b> <span id="polygonCount">0</span></div>
+        </div>
+    </div>
+    
+    <!-- Botón de actualización -->
+    <button class="update-button" onclick="checkForUpdates()">
+        <i class="fas fa-sync-alt"></i> Verificar actualización
+    </button>
+    
+    <!-- Info actualización -->
+    <div class="update-info" id="updateInfo" style="display: none;">
+        <span id="updateMessage"></span>
+    </div>
+    
+    <!-- Mapa -->
+    <div id="map"></div>
+    
+    <!-- INCLUYE AQUÍ TODOS TUS SCRIPTS DE MAPA, CAPAS, BUSCADOR, etc. -->
+    <!-- (Todo el JavaScript de tu código 3, excepto la parte de login en Colab) -->
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Variable global para el mapa
+        let map;
+        let geoJsonLayer;
+        
+        // URL del GeoJSON actualizado
+        const GEOJSON_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/data/latest.geojson';
+        const UPDATE_CHECK_URL = 'https://api.github.com/repos/TU_USUARIO/TU_REPO/commits?path=data/latest.geojson&per_page=1';
+        
+        // Inicializar mapa
+        function initMap() {
+            // Configuración inicial del mapa (igual que tu código)
+            map = L.map('map', {
+                center: [-31.4201, -64.1888],
+                zoom: 11,
+                zoomControl: true
+            });
+            
+            // Agregar capas base (igual que tu código)
+            L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                attribution: 'Google',
+                name: '🌍 Google Satélite',
+                maxZoom: 20
+            }).addTo(map);
+            
+            // ... otras capas base
+            
+            // Cargar GeoJSON
+            loadGeoJSON();
+            
+            // Verificar última actualización
+            checkLastUpdate();
+        }
+        
+        // Cargar GeoJSON
+        function loadGeoJSON() {
+            // Remover capa anterior si existe
+            if (geoJsonLayer) {
+                map.removeLayer(geoJsonLayer);
+            }
+            
+            // Cargar GeoJSON
+            fetch(GEOJSON_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error cargando GeoJSON');
+                    return response.json();
+                })
+                .then(data => {
+                    // Procesar datos (igual que tu código)
+                    updatePolygonCount(data);
+                    
+                    // Crear capa GeoJSON con tus estilos y funciones
+                    geoJsonLayer = L.geoJSON(data, {
+                        style: function(feature) {
+                            // Tu función de estilo por cultivo
+                            return {
+                                fillColor: getColorByCrop(feature.properties.CULTIVO),
+                                color: '#7B1FA2',
+                                weight: 2,
+                                fillOpacity: 0.6,
+                                dashArray: '5, 5'
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            // Tooltips y popups (igual que tu código)
+                            if (feature.properties && feature.properties.CLIENTE) {
+                                layer.bindTooltip(feature.properties.CLIENTE);
+                                layer.bindPopup(createPopupContent(feature.properties));
+                            }
+                        }
+                    }).addTo(map);
+                    
+                    // Ajustar vista
+                    if (data.features && data.features.length > 0) {
+                        map.fitBounds(geoJsonLayer.getBounds());
+                    }
+                    
+                    console.log('✅ GeoJSON cargado:', data.features.length, 'polígonos');
+                })
+                .catch(error => {
+                    console.error('❌ Error cargando GeoJSON:', error);
+                    document.getElementById('polygonCount').textContent = 'Error';
+                });
+        }
+        
+        // Verificar última actualización
+        function checkLastUpdate() {
+            fetch(UPDATE_CHECK_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data[0] && data[0].commit) {
+                        const lastCommit = new Date(data[0].commit.committer.date);
+                        document.getElementById('lastUpdate').textContent = 
+                            lastCommit.toLocaleDateString('es-AR') + ' ' + 
+                            lastCommit.toLocaleTimeString('es-AR');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verificando actualización:', error);
+                });
+        }
+        
+        // Verificar actualizaciones manualmente
+        function checkForUpdates() {
+            const updateBtn = document.querySelector('.update-button');
+            const updateInfo = document.getElementById('updateInfo');
+            const updateMessage = document.getElementById('updateMessage');
+            
+            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+            updateBtn.disabled = true;
+            
+            // Forzar recarga del GeoJSON
+            loadGeoJSON();
+            
+            // Mostrar mensaje
+            updateInfo.style.display = 'block';
+            updateMessage.textContent = 'Datos actualizados';
+            updateMessage.style.color = '#4CAF50';
+            
+            setTimeout(() => {
+                updateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Verificar actualización';
+                updateBtn.disabled = false;
+                setTimeout(() => {
+                    updateInfo.style.display = 'none';
+                }, 3000);
+            }, 1000);
+        }
+        
+        // Función auxiliar para contar polígonos
+        function updatePolygonCount(data) {
+            const count = data.features ? data.features.length : 0;
+            document.getElementById('polygonCount').textContent = count;
+        }
+        
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+    
+    <!-- INCLUYE AQUÍ EL RESTO DE TU JAVASCRIPT -->
+    <!-- (Buscador, gráficos, leyenda, etc. - TODO excepto login Colab) -->
+</body>
+</html>
