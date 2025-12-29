@@ -18,13 +18,13 @@ jobs:
     steps:
     # 1. Checkout del código
     - name: Checkout código
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         persist-credentials: false
         
     # 2. Configurar Python
     - name: Configurar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
         
@@ -33,7 +33,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
-        pip install owslib branca streamlit-folium
+        pip install owslib branca
         
     # 4. Ejecutar script de descarga (crea poligonos.geojson)
     - name: Descargar datos de Multiriesgo
@@ -67,23 +67,10 @@ jobs:
         echo "📁 Archivos en el repositorio:"
         ls -la *.html *.geojson
         
-    # 8. Subir archivo HTML generado (opcional)
-    - name: Subir archivo HTML
-      if: success()
-      run: |
-        # Buscar el archivo HTML más reciente
-        LATEST_HTML=$(ls -t visor_cultivos_*.html | head -1)
-        if [ -n "$LATEST_HTML" ]; then
-          echo "📤 Subiendo $LATEST_HTML"
-          echo "Este archivo contiene la aplicación web completa"
-        else
-          echo "⚠️ No se encontró archivo HTML generado"
-        fi
-        
-    # 9. Opcional: Subir como artifact para descargar
+    # 8. Subir archivo HTML generado
     - name: Subir archivos como artifact
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: aplicacion-web-multiriesgo
         path: |
