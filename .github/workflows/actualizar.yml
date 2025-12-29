@@ -1,7 +1,7 @@
 name: Generar Aplicación Web Multiriesgo
 
 on:
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:
   schedule:
     - cron: '0 8 * * *'
   push:
@@ -15,93 +15,86 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Checkout del código
+    # 1. Checkout
     - name: Checkout código
       uses: actions/checkout@v4
       with:
         persist-credentials: false
         
-    # 2. Configurar Python
+    # 2. Python
     - name: Configurar Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.9'
         
-    # 3. Instalar dependencias
+    # 3. Dependencias
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
         pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
         pip install owslib branca
         
-    # 4. Ejecutar script de descarga
+    # 4. Limpiar archivos viejos (OPCIONAL)
+    - name: Limpiar archivos viejos
+      run: |
+        echo "🧹 Limpiando archivos HTML viejos..."
+        rm -f index.html app_generada.html visor*.html
+        
+    # 5. Descargar datos
     - name: Descargar datos de Multiriesgo
       env:
         MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
         MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
       run: |
-        echo "🚀 Iniciando descarga automática..."
+        echo "🚀 Descargando datos..."
         python script_geojson.py
         
-    # 5. Generar aplicación web
+    # 6. Generar aplicación (DIRECTAMENTE COMO INDEX.HTML)
     - name: Generar aplicación web
       run: |
-        echo "🛠️ Generando aplicación web..."
+        echo "🛠️ Generando index.html..."
         python generar_visor.py
         
-    # 6. Renombrar a index.html (SIEMPRE)
-    - name: Renombrar HTML a index.html
+    # 7. Verificar que se creó
+    - name: Verificar index.html
       run: |
-        echo "📁 Buscando archivos HTML..."
-        ls -la *.html 2>/dev/null || echo "No hay HTML todavía"
-        
-        # SI existe app_generada.html, renombrarlo
-        if [ -f "app_generada.html" ]; then
-          echo "✅ Encontrado: app_generada.html"
-          cp app_generada.html index.html
-          echo "📄 index.html creado (copia de app_generada.html)"
+        if [ -f "index.html" ]; then
+          echo "✅ index.html creado exitosamente!"
+          ls -lh index.html
         else
-          echo "❌ ERROR: No se encontró app_generada.html"
-          echo "📁 Listando todos los archivos para debug:"
-          ls -la
+          echo "❌ ERROR: No se creó index.html"
+          echo "📁 Archivos disponibles:"
+          ls -la *.html
           exit 1
         fi
         
-    # 7. Configurar git
+    # 8. Configurar git
     - name: Configurar git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-    # 8. Subir al repositorio
+    # 9. Subir al repositorio
     - name: Subir archivos al repositorio
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "📤 Subiendo archivos al repositorio..."
+        # Solo subir los archivos importantes
+        git add index.html poligonos.geojson
         
-        # Agregar archivos específicos
-        git add index.html 2>/dev/null || true
-        git add poligonos.geojson 2>/dev/null || true
-        
-        # Verificar si hay cambios
         if ! git diff --cached --quiet; then
-          echo "📝 Haciendo commit..."
-          git commit -m "📱 Actualización automática: $(date '+%Y-%m-%d %H:%M')"
-          
-          echo "⬆️ Subiendo cambios..."
+          git commit -m "📱 App actualizada: $(date '+%d/%m %H:%M')"
           git push
-          echo "✅ Cambios subidos exitosamente"
+          echo "✅ Subido a GitHub"
         else
-          echo "⚠️ No hay cambios para commitear"
+          echo "⚠️ Sin cambios"
         fi
         
-    # 9. Subir como artifact (opcional)
+    # 10. (Opcional) Artifact
     - name: Subir como artifact
       uses: actions/upload-artifact@v4
       with:
-        name: aplicacion-web-multiriesgo
+        name: app-multiriesgo
         path: |
           index.html
           poligonos.geojson
-        retention-days: 7
