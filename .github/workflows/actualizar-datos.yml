@@ -1,0 +1,101 @@
+name: 🤖 Actualizar datos automáticamente
+
+# CUÁNDO SE EJECUTA:
+on:
+  # 1. Manualmente desde la pestaña Actions
+  workflow_dispatch:
+  # 2. Cada día a las 8 AM (hora Argentina)
+  schedule:
+    - cron: '0 11 * * *'  # 11 AM UTC = 8 AM Argentina
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # PASO 1: Descargar el código del repositorio
+    - name: 📥 Obtener código
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Para poder hacer git push después
+      
+    # PASO 2: Configurar Python
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    # PASO 3: Instalar dependencias del sistema
+    - name: 🖥️ Instalar dependencias del sistema
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        
+    # PASO 4: Instalar dependencias de Python
+    - name: 📦 Instalar Python packages
+      run: |
+        pip install -r requirements.txt
+        
+    # PASO 5: Descargar CSV automáticamente
+    - name: 🤖 Descargar CSV de multiriesgo-cba.com
+      env:
+        MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+        MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
+      run: |
+        echo "🔐 Iniciando descarga automática..."
+        python scripts/descargar_csv.py
+        
+    # PASO 6: Convertir CSV a GeoJSON
+    - name: 🗺️ Convertir a GeoJSON
+      run: |
+        echo "🔄 Convirtiendo CSV a GeoJSON..."
+        python convertir_excel_a_geojson.py
+        
+    # PASO 7: Verificar que se crearon los archivos
+    - name: 🔍 Verificar archivos generados
+      run: |
+        echo "📁 Archivos en el directorio:"
+        ls -la *.csv *.geojson *.json 2>/dev/null || echo "No hay archivos"
+        echo ""
+        echo "📏 Tamaño de datos_actualizados.geojson:"
+        if [ -f "datos_actualizados.geojson" ]; then
+          du -h datos_actualizados.geojson
+        else
+          echo "❌ No se encontró datos_actualizados.geojson"
+        fi
+        
+    # PASO 8: Actualizar el repositorio con los nuevos datos
+    - name: 💾 Guardar cambios en GitHub
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Agregar archivos nuevos
+        git add datos_actualizados.csv datos_actualizados.geojson
+        
+        # Agregar archivos de backup
+        git add *.geojson *.csv
+        
+        # Hacer commit si hay cambios
+        if git diff --cached --quiet; then
+          echo "📭 No hay cambios para commitear"
+        else
+          git commit -m "🤖 Actualización automática $(date +'%d/%m/%Y %H:%M')"
+          git push
+          echo "✅ Cambios subidos a GitHub"
+        fi
+        
+    # PASO 9: Mostrar resumen
+    - name: 📊 Resumen del proceso
+      run: |
+        echo "========================================"
+        echo "✅ PROCESO COMPLETADO"
+        echo "========================================"
+        echo "Los datos actualizados están disponibles en:"
+        echo "https://github.com/franciscotomatis/APP-C-rdoba"
+        echo ""
+        echo "📁 Archivos principales:"
+        echo "- datos_actualizados.csv"
+        echo "- datos_actualizados.geojson"
+        echo ""
+        echo "⏰ Próxima actualización automática: mañana 8 AM"
