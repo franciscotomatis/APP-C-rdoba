@@ -1,177 +1,95 @@
 name: 🤖 Actualizar datos automáticamente
 
-# CUÁNDO SE EJECUTA:
 on:
-  # 1. Manualmente desde la pestaña Actions
-  workflow_dispatch:
-  # 2. Cada día a las 8 AM (hora Argentina)
   schedule:
-    - cron: '0 11 * * *'  # 11 AM UTC = 8 AM Argentina
-  # 3. Cuando haces cambios en los scripts
-  push:
-    paths:
-      - 'scripts/**'
-      - 'convertir_excel_a_geojson.py'
-      - 'requirements.txt'
-      - '.github/workflows/**'
-
-# PERMISOS PARA HACER PUSH
-permissions:
-  contents: write
+    # Se ejecuta TODOS LOS DÍAS a las 8:00 AM (hora UTC-3 Argentina)
+    - cron: '0 11 * * *'   # 11:00 UTC = 8:00 AM Argentina (UTC-3)
+    
+  # También se puede ejecutar manualmente desde GitHub Actions
+  workflow_dispatch:
 
 jobs:
-  actualizar:
+  actualizar-datos:
     runs-on: ubuntu-latest
     
     steps:
-    # PASO 1: Descargar el código del repositorio
-    - name: 📥 Obtener código
-      uses: actions/checkout@v4
+    - name: 📥 Checkout del repositorio
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Descargar todo el historial (necesario para git push)
-        token: ${{ secrets.GITHUB_TOKEN }}
-      
-    # PASO 2: Configurar Python
-    - name: 🐍 Configurar Python 3.10
+        fetch-depth: 0  # Traer todo el historial
+    
+    - name: 🐍 Configurar Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-        
-    # PASO 3: Instalar dependencias del sistema (CHROME PRIMERO)
-    - name: 🖥️ Instalar Chrome y dependencias del sistema
+    
+    - name: 📦 Instalar dependencias
       run: |
-        sudo apt-get update
-        sudo apt-get install -y wget unzip chromium-browser
-        echo "✅ Dependencias del sistema instaladas"
-        
-    # PASO 4: Instalar dependencias de Python
-    - name: 📦 Instalar Python packages
-      run: |
-        echo "📋 Contenido de requirements.txt:"
-        cat requirements.txt
-        echo ""
-        
-        pip install --upgrade pip
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
-        echo "✅ Paquetes Python instalados"
-        echo "📊 Versiones instaladas:"
-        pip list | grep -E "(selenium|pandas|geopandas|shapely|webdriver)"
-        
-    # PASO 5: Descargar CSV automáticamente
-    - name: 🤖 Descargar CSV de multiriesgo-cba.com
+    
+    - name: 🤖 Ejecutar script de descarga
       env:
         MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
         MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
-      run: |
-        echo "🔐 Usuario: $MULTIRIESGO_USUARIO"
-        echo "📂 Directorio actual: $(pwd)"
-        echo "📋 Archivos antes de descargar:"
-        ls -la
-        
-        echo ""
-        echo "🚀 Iniciando descarga automática..."
-        python scripts/descargar_csv.py
-        
-        echo ""
-        echo "📁 Archivos después de descargar:"
-        ls -la *.csv 2>/dev/null || echo "No hay archivos CSV"
-        
-    # PASO 6: Convertir CSV a GeoJSON
-    - name: 🗺️ Convertir a GeoJSON
+      run: python scripts/descargar_csv.py
+    
+    - name: 🔄 Verificar archivo CSV
       run: |
         echo "🔄 Verificando archivo CSV..."
         if [ -f "datos_actualizados.csv" ]; then
-          echo "✅ CSV encontrado, tamaño: $(du -h datos_actualizados.csv | cut -f1)"
-          echo "🔄 Convirtiendo CSV a GeoJSON..."
-          python convertir_excel_a_geojson.py
+          size=$(stat -f%z "datos_actualizados.csv" 2>/dev/null || stat -c%s "datos_actualizados.csv")
+          echo "✅ CSV encontrado, tamaño: $((size/1024/1024))M"
         else
-          echo "❌ ERROR: No se encontró datos_actualizados.csv"
-          echo "📁 Archivos disponibles:"
-          ls -la
+          echo "❌ No se encontró datos_actualizados.csv"
           exit 1
         fi
-        
-    # PASO 7: Verificar que se crearon los archivos
-    - name: 🔍 Verificar archivos generados
+    
+    - name: 🗺️ Convertir CSV a GeoJSON
+      run: python convertir_csv_a_geojson.py  # ← NOMBRE CORREGIDO
+    
+    - name: 📊 Verificar GeoJSON generado
       run: |
-        echo "📁 ARCHIVOS GENERADOS:"
-        echo "======================"
-        
-        # Listar todos los archivos relevantes
-        find . -name "*.geojson" -o -name "*.csv" -o -name "*.json" | head -20
-        
-        echo ""
-        echo "📏 TAMAÑOS DE ARCHIVOS:"
-        echo "======================"
-        
+        echo "🔍 Verificando GeoJSON..."
         if [ -f "datos_actualizados.geojson" ]; then
-          echo "✅ datos_actualizados.geojson: $(du -h datos_actualizados.geojson | cut -f1)"
-          # Contar features
-          echo "   Polígonos: $(grep -c '"type": "Feature"' datos_actualizados.geojson || echo "0")"
+          size=$(stat -f%z "datos_actualizados.geojson" 2>/dev/null || stat -c%s "datos_actualizados.geojson")
+          num_features=$(python -c "import json; f=open('datos_actualizados.geojson'); d=json.load(f); print(len(d['features']))" 2>/dev/null || echo "?")
+          echo "✅ GeoJSON generado: $((size/1024/1024))M, $num_features polígonos"
         else
-          echo "❌ No se encontró datos_actualizados.geojson"
+          echo "❌ No se generó datos_actualizados.geojson"
+          exit 1
         fi
-        
-        if [ -f "datos_actualizados.csv" ]; then
-          echo "✅ datos_actualizados.csv: $(du -h datos_actualizados.csv | cut -f1)"
-          echo "   Líneas: $(wc -l < datos_actualizados.csv || echo "0")"
-        fi
-        
-    # PASO 8: Actualizar el repositorio con los nuevos datos
-    - name: 💾 Guardar cambios en GitHub
+    
+    - name: 📤 Commit y push de cambios
       run: |
-        echo "🔄 Configurando Git..."
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        echo "📝 Configurando Git..."
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "actions@github.com"
         
-        echo "📋 Estado de Git antes:"
-        git status --short
+        echo "🔄 Agregando archivos..."
+        git add datos_actualizados.csv datos_actualizados.geojson
         
-        echo ""
-        echo "📦 Agregando archivos..."
-        # Agregar archivos principales
-        git add datos_actualizados.csv datos_actualizados.geojson || true
-        
-        # Agregar archivos de backup (si existen)
-        git add poligonos_*.geojson poligonos_*.gpkg reporte_*.csv 2>/dev/null || true
-        
-        echo "📋 Estado de Git después de agregar:"
-        git status --short
-        
-        echo ""
-        echo "💾 Creando commit..."
+        echo "💾 Haciendo commit..."
         # Solo hacer commit si hay cambios
         if git diff --cached --quiet; then
-          echo "📭 No hay cambios para commitear"
+          echo "⚠️  No hay cambios para commit"
         else
-          FECHA=$(date +'%d/%m/%Y %H:%M')
-          git commit -m "🤖 Actualización automática $FECHA"
+          timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+          git commit -m "🤖 Actualización automática: $timestamp"
           
-          echo "🚀 Subiendo cambios..."
+          echo "🚀 Haciendo push..."
           git push
           echo "✅ Cambios subidos a GitHub"
         fi
-        
-    # PASO 9: Mostrar resumen y URL
-    - name: 📊 Resumen del proceso
+    
+    - name: 📋 Resumen final
       run: |
-        echo ""
         echo "========================================"
-        echo "🎉 PROCESO COMPLETADO EXITOSAMENTE"
+        echo "✅ PROCESO COMPLETADO EXITOSAMENTE"
         echo "========================================"
-        echo ""
-        echo "🌐 DATOS DISPONIBLES EN:"
-        echo "https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/datos_actualizados.geojson"
-        echo ""
         echo "📁 ARCHIVOS PRINCIPALES:"
-        echo "- datos_actualizados.csv (datos brutos)"
-        echo "- datos_actualizados.geojson (para la app)"
+        echo "- datos_actualizados.csv"
+        echo "- datos_actualizados.geojson"
         echo ""
-        echo "⏰ PRÓXIMA ACTUALIZACIÓN AUTOMÁTICA:"
-        echo "- Mañana a las 8 AM (hora Argentina)"
-        echo "- O haz clic en 'Run workflow' para actualizar ahora"
-        echo ""
-        echo "🔗 ENLACE A LA APP (cuando la configures):"
-        echo "https://franciscotomatis.github.io/APP-C-rdoba/"
+        echo "📅 Última actualización: $(date)"
         echo "========================================"
