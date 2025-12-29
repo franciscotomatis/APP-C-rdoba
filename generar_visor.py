@@ -1669,12 +1669,11 @@ def crear_app_geojson():
         m.get_root().html.add_child(folium.Element(login_html))
         
         # 💾 GUARDAR ARCHIVO HTML
-        from datetime import datetime
-        fecha_str = datetime.now().strftime("%Y%m%d_%H%M")
-        output_file = f"visor_cultivos_automatico_{fecha_str}.html"
+        output_file = "app_generada.html"
         m.save(output_file)
         
         print(f"\n✅ Aplicación guardada como: {output_file}")
+        print(f"📅 Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         print(f"🔐 Credenciales para la aplicación web:")
         print(f"   Usuario: {USUARIO_CORRECTO}")
         print(f"   Contraseña: {CONTRASENA_CORRECTA}")
