@@ -1,0 +1,35 @@
+name: Actualizar Poligonos Diario
+on:
+  schedule:
+    - cron: '0 5 * * *' # Se ejecuta a las 2 AM de Argentina
+  workflow_dispatch: # Esto permite que lo ejecutes vos a mano para probar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          pip install selenium webdriver-manager pandas
+
+      - name: Ejecutar script
+        env:
+          MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+          MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
+        run: python script_geojson.py
+
+      - name: Subir poligonos.geojson al repositorio
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add poligonos.geojson
+          git commit -m "Actualización automática de polígonos" || exit 0
+          git push
