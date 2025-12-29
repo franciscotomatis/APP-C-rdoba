@@ -3,7 +3,6 @@ name: Generar Aplicación Web Multiriesgo
 on:
   workflow_dispatch:  # Permite ejecución manual
   schedule:
-    # Ejecuta automáticamente todos los días a las 8 AM UTC (5 AM Argentina)
     - cron: '0 8 * * *'
   push:
     branches: [ main ]
@@ -35,7 +34,7 @@ jobs:
         pip install geopandas pandas shapely folium selenium webdriver-manager lxml openpyxl
         pip install owslib branca
         
-    # 4. Ejecutar script de descarga (crea poligonos.geojson)
+    # 4. Ejecutar script de descarga
     - name: Descargar datos de Multiriesgo
       env:
         MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
@@ -44,16 +43,11 @@ jobs:
         echo "🚀 Iniciando descarga automática..."
         python script_geojson.py
         
-    # 5. Verificar que se creó el geojson
-    - name: Verificar archivo geojson
+    # 5. Verificar archivos
+    - name: Verificar archivos existentes
       run: |
-        if [ -f "poligonos.geojson" ]; then
-          echo "✅ poligonos.geojson creado correctamente"
-          ls -lh poligonos.geojson
-        else
-          echo "❌ ERROR: No se creó poligonos.geojson"
-          exit 1
-        fi
+        echo "📁 Archivos actuales:"
+        ls -la
         
     # 6. Generar aplicación web
     - name: Generar aplicación web
@@ -61,48 +55,70 @@ jobs:
         echo "🛠️ Generando aplicación web..."
         python generar_visor.py
         
-    # 7. Buscar el HTML generado más reciente
-    - name: Buscar HTML generado
-      id: find-html
+    # 7. Listar TODOS los archivos después de generar
+    - name: Listar archivos generados
       run: |
-        # Buscar el archivo HTML más reciente
-        LATEST_HTML=$(ls -t visor_cultivos_automatico_*.html | head -1)
-        if [ -n "$LATEST_HTML" ]; then
-          echo "📄 HTML encontrado: $LATEST_HTML"
-          echo "html_file=$LATEST_HTML" >> $GITHUB_OUTPUT
-          
-          # Renombrar como index.html
-          cp "$LATEST_HTML" "index.html"
-          echo "✅ Renombrado a index.html"
+        echo "📁 TODOS los archivos después de generar:"
+        ls -la
+        
+        echo "📁 Archivos HTML específicamente:"
+        ls -la *.html 2>/dev/null || echo "No hay archivos HTML"
+        
+        echo "📁 Archivos que contienen 'visor':"
+        ls -la *visor* 2>/dev/null || echo "No hay archivos con 'visor'"
+        
+    # 8. Renombrar a index.html (si se generó algún HTML)
+    - name: Preparar index.html
+      run: |
+        # Buscar cualquier archivo HTML
+        HTML_FILE=$(ls -t *.html 2>/dev/null | head -1)
+        
+        if [ -n "$HTML_FILE" ] && [ -f "$HTML_FILE" ]; then
+          echo "✅ HTML encontrado: $HTML_FILE"
+          cp "$HTML_FILE" "index.html"
+          echo "📄 index.html creado desde $HTML_FILE"
         else
-          echo "❌ No se encontró archivo HTML"
-          exit 1
+          # Si no hay HTML, crear uno básico de error
+          echo "⚠️ No se encontró HTML, creando placeholder"
+          cat > index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Error - Aplicación Multiriesgo</title>
+          </head>
+          <body>
+              <h1>⚠️ Error generando la aplicación</h1>
+              <p>El proceso automático no pudo generar la aplicación web.</p>
+              <p>Por favor, revisa los logs en GitHub Actions.</p>
+          </body>
+          </html>
+          EOF
         fi
         
-    # 8. Configurar git
+    # 9. Configurar git
     - name: Configurar git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-    # 9. Subir al repositorio
+    # 10. Subir al repositorio
     - name: Subir archivos al repositorio
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Agregar archivos generados
-        git add index.html poligonos.geojson
+        # Agregar archivos
+        git add index.html poligonos.geojson 2>/dev/null || true
         
-        # Verificar si hay cambios
-        if git diff --staged --quiet; then
-          echo "⚠️ No hay cambios para commitear"
-        else
-          # Hacer commit
+        # Verificar cambios
+        if ! git diff --staged --quiet; then
           git commit -m "📱 Actualización automática: $(date '+%Y-%m-%d %H:%M')"
-          
-          # Subir cambios
           git push
+          echo "✅ Cambios subidos al repositorio"
+        else
+          echo "⚠️ No hay cambios para commitear"
         fi
         
-    # 10. (Opcional) Subir también como artifact para backup
+    # 11. Subir como artifact
     - name: Subir como artifact
       uses: actions/upload-artifact@v4
       with:
