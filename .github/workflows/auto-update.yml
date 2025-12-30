@@ -2,9 +2,14 @@ name: Actualización Automática Diaria
 
 on:
   schedule:
-    # Ejecuta a las 6 AM y 6 PM UTC (3 AM y 3 PM Argentina)
+    # 6 AM y 6 PM UTC (3 AM y 3 PM Argentina)
     - cron: '0 6,18 * * *'
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: 'Motivo de ejecución manual'
+        required: false
+        default: 'Prueba manual'
 
 jobs:
   actualizar:
@@ -21,7 +26,7 @@ jobs:
       with:
         python-version: '3.10'
         
-    - name: 📦 Instalar Chrome y dependencias
+    - name: 📦 Instalar dependencias
       run: |
         sudo apt-get update
         sudo apt-get install -y chromium-browser chromium-chromedriver
@@ -33,7 +38,7 @@ jobs:
         MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
       run: |
         echo "🔐 Usuario configurado"
-        mkdir -p data app
+        mkdir -p data
         python scripts/proceso_completo.py
         
     - name: 📤 Subir cambios a GitHub
@@ -42,15 +47,49 @@ jobs:
         git config --global user.email "github-actions@github.com"
         
         # Verificar qué archivos se generaron
-        echo "📁 Archivos generados:"
-        ls -la data/ || echo "No hay data/"
-        ls -la app/ || echo "No hay app/"
+        echo "📁 Archivos generados en raíz:"
+        ls -la *.html *.json *.geojson 2>/dev/null || echo "No hay archivos en raíz"
         
-        # Agregar TODO lo nuevo
-        git add .
+        echo "📁 Archivos generados en data/:"
+        ls -la data/ 2>/dev/null || echo "No hay data/"
         
-        # Commit solo si hay cambios
-        if ! git diff --cached --quiet; then
+        # Agregar archivos ESPECÍFICOS
+        if [ -f "data/poligonos.geojson" ]; then
+          git add data/poligonos.geojson
+          echo "✅ Agregado: data/poligonos.geojson"
+        fi
+        
+        if [ -f "data/poligonos_actualizados.geojson" ]; then
+          git add data/poligonos_actualizados.geojson
+          echo "✅ Agregado: data/poligonos_actualizados.geojson"
+        fi
+        
+        if [ -f "data/datos_actualizados.xlsx" ]; then
+          git add data/datos_actualizados.xlsx
+          echo "✅ Agregado: data/datos_actualizados.xlsx"
+        fi
+        
+        if [ -f "data/datos_prueba.xlsx" ]; then
+          git add data/datos_prueba.xlsx
+          echo "✅ Agregado: data/datos_prueba.xlsx"
+        fi
+        
+        # IMPORTANTE: HTML en RAÍZ
+        if [ -f "index.html" ]; then
+          git add index.html
+          echo "✅ Agregado: index.html (EN RAÍZ)"
+        fi
+        
+        # También buscar en app/ por si acaso
+        if [ -f "app/index.html" ]; then
+          git add app/index.html
+          echo "✅ Agregado: app/index.html (backup)"
+        fi
+        
+        # Verificar si hay archivos para commit
+        echo "🔍 Verificando cambios..."
+        if git status --porcelain | grep -q "."; then
+          echo "📝 Hay cambios, haciendo commit..."
           git commit -m "🔄 Actualización automática - $(date '+%d/%m/%Y %H:%M')"
           git push
           echo "✅ Cambios subidos a GitHub"
