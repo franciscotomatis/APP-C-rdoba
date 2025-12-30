@@ -1,0 +1,59 @@
+name: Actualización Automática Diaria
+
+on:
+  schedule:
+    # Ejecuta a las 6 AM y 6 PM UTC (3 AM y 3 PM Argentina)
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:  # Permite ejecución manual
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: ⬇️ Descargar repositorio
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: 📦 Instalar Chrome y dependencias
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser chromium-chromedriver
+        pip install selenium webdriver-manager pandas openpyxl geopandas shapely
+        
+    - name: 🚀 Ejecutar proceso completo
+      env:
+        MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
+        MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
+      run: |
+        echo "🔐 Usuario configurado"
+        mkdir -p data app
+        python scripts/proceso_completo.py
+        
+    - name: 📤 Subir cambios a GitHub
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        
+        # Verificar qué archivos se generaron
+        echo "📁 Archivos generados:"
+        ls -la data/ || echo "No hay data/"
+        ls -la app/ || echo "No hay app/"
+        
+        # Agregar TODO lo nuevo
+        git add .
+        
+        # Commit solo si hay cambios
+        if ! git diff --cached --quiet; then
+          git commit -m "🔄 Actualización automática - $(date '+%d/%m/%Y %H:%M')"
+          git push
+          echo "✅ Cambios subidos a GitHub"
+        else
+          echo "📭 No hay cambios para commit"
+        fi
