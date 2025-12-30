@@ -1,26 +1,18 @@
-name: Actualización Automática Diaria
+name: Actualización Automática de Datos
 
 on:
   schedule:
-    # 6 AM y 6 PM UTC (3 AM y 3 PM Argentina)
-    - cron: '0 6,18 * * *'
-  workflow_dispatch:
-    inputs:
-      motivo:
-        description: 'Motivo de ejecución manual'
-        required: false
-        default: 'Prueba manual'
+    - cron: '0 6,18 * * *'  # 6 AM y 6 PM UTC (3 AM y 3 PM Argentina)
+  workflow_dispatch:  # Para ejecución manual
 
 jobs:
-  actualizar:
+  actualizar-datos:
     runs-on: ubuntu-latest
     
     steps:
     - name: ⬇️ Descargar repositorio
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        
+      
     - name: 🐍 Configurar Python
       uses: actions/setup-python@v4
       with:
@@ -30,69 +22,34 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y chromium-browser chromium-chromedriver
-        pip install selenium webdriver-manager pandas openpyxl geopandas shapely
+        pip install selenium pandas geopandas openpyxl
         
-    - name: 🚀 Ejecutar proceso completo
+    - name: 🚀 Ejecutar descarga de datos
       env:
         MULTIRIESGO_USUARIO: ${{ secrets.MULTIRIESGO_USUARIO }}
         MULTIRIESGO_CONTRASENA: ${{ secrets.MULTIRIESGO_CONTRASENA }}
       run: |
-        echo "🔐 Usuario configurado"
-        mkdir -p data
+        echo "🔐 Iniciando descarga..."
         python scripts/proceso_completo.py
+        echo "✅ Proceso completado"
         
-    - name: 📤 Subir cambios a GitHub
+    - name: 📤 Subir SOLO GeoJSON actualizado
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         
-        # Verificar qué archivos se generaron
-        echo "📁 Archivos generados en raíz:"
-        ls -la *.html *.json *.geojson 2>/dev/null || echo "No hay archivos en raíz"
+        echo "📊 Subiendo cambios de datos..."
         
-        echo "📁 Archivos generados en data/:"
-        ls -la data/ 2>/dev/null || echo "No hay data/"
+        # Agregar SOLO archivos de datos
+        git add data/poligonos.geojson 2>/dev/null || echo "⚠️ poligonos.geojson no existe"
+        git add data/poligonos_actualizados.geojson 2>/dev/null || echo "⚠️ poligonos_actualizados.geojson no existe"
+        git add data/datos_actualizados.xlsx 2>/dev/null || echo "⚠️ datos_actualizados.xlsx no existe"
         
-        # Agregar archivos ESPECÍFICOS
-        if [ -f "data/poligonos.geojson" ]; then
-          git add data/poligonos.geojson
-          echo "✅ Agregado: data/poligonos.geojson"
-        fi
-        
-        if [ -f "data/poligonos_actualizados.geojson" ]; then
-          git add data/poligonos_actualizados.geojson
-          echo "✅ Agregado: data/poligonos_actualizados.geojson"
-        fi
-        
-        if [ -f "data/datos_actualizados.xlsx" ]; then
-          git add data/datos_actualizados.xlsx
-          echo "✅ Agregado: data/datos_actualizados.xlsx"
-        fi
-        
-        if [ -f "data/datos_prueba.xlsx" ]; then
-          git add data/datos_prueba.xlsx
-          echo "✅ Agregado: data/datos_prueba.xlsx"
-        fi
-        
-        # IMPORTANTE: HTML en RAÍZ
-        if [ -f "index.html" ]; then
-          git add index.html
-          echo "✅ Agregado: index.html (EN RAÍZ)"
-        fi
-        
-        # También buscar en app/ por si acaso
-        if [ -f "app/index.html" ]; then
-          git add app/index.html
-          echo "✅ Agregado: app/index.html (backup)"
-        fi
-        
-        # Verificar si hay archivos para commit
-        echo "🔍 Verificando cambios..."
-        if git status --porcelain | grep -q "."; then
-          echo "📝 Hay cambios, haciendo commit..."
-          git commit -m "🔄 Actualización automática - $(date '+%d/%m/%Y %H:%M')"
-          git push
-          echo "✅ Cambios subidos a GitHub"
+        # Verificar si hay cambios REALES
+        if git diff --cached --quiet; then
+          echo "📭 No hay cambios en los datos"
         else
-          echo "📭 No hay cambios para commit"
+          git commit -m "🗺️ Actualización de datos - $(date '+%d/%m/%Y %H:%M')" || echo "⚠️ Commit vacío"
+          git push
+          echo "✅ Datos actualizados en GitHub"
         fi
