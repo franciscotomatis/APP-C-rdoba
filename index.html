@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_4d1e2ccc56a22665e46169543fab7180 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
+    <script src="https://cdn.jsdelivr.net/gh/ljagis/leaflet-measure@2.1.7/dist/leaflet-measure.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ljagis/leaflet-measure@2.1.7/dist/leaflet-measure.min.css"/>
+</head>
+<body>
+    
+    
+            <div style="position: fixed; 
+                        top: 10px; left: 10px;
+                        background-color: rgba(255, 255, 255, 0.95);
+                        padding: 6px 10px;
+                        border-radius: 4px;
+                        border: 1px solid #4CAF50;
+                        z-index: 9999;
+                        font-family: Arial, sans-serif;
+                        font-size: 10px;
+                        max-width: 200px;
+                        min-width: 180px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-weight: bold; color: #2E7D32; font-size: 14px; 
+                            margin-bottom: 4px;">
+                    PROGRAMA CÓRDOBA 25/26
+                </div>
+                <div style="margin-top: 4px; font-size: 9px; color: #555; 
+                            border-top: 1px solid #e0e0e0; padding-top: 4px;">
+                    <div><b>Actualizado:</b> 30/12/2025 15:42</div>
+                    <div><b>Fuente:</b> GitHub automático</div>
+                    <div><b>Cargando datos...</b></div>
+                </div>
+            </div>
+            
+    
+            <div id="leyendaPrecip" style="position: fixed; 
+                    bottom: 40px; left: 10px;
+                    background-color: rgba(255, 255, 255, 0.98);
+                    padding: 10px 14px;
+                    border-radius: 8px;
+                    border: 2px solid #1E88E5;
+                    z-index: 9996;
+                    font-family: Arial, sans-serif;
+                    font-size: 11px;
+                    width: 140px;
+                    display: none;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+                    max-height: 400px;
+                    overflow-y: auto;">
+                
+                <div style="font-weight: bold; color: #1E88E5; 
+                            margin-bottom: 10px; border-bottom: 2px solid #1E88E5; 
+                            padding-bottom: 6px; font-size: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span>🌧️</span>
+                            <span>Precipitación (mm)</span>
+                        </div>
+                        <button onclick="ocultarLeyendaPrecip()" 
+                                style="background: none; border: none; color: #1E88E5; 
+                                       font-size: 16px; cursor: pointer; padding: 0; 
+                                       line-height: 1;">×</button>
+                    </div>
+                </div>
+                
+                <!-- ESCALA DE COLORES COMPLETA -->
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                        <div style="width: 18px; height: 18px; background-color: #9e9eFF; 
+                                    margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                        <div style="flex: 1; display: flex; justify-content: space-between;">
+                            <span style="font-size: 10px;">0</span>
+                            <span style="font-size: 10px; color: #666;">mm</span>
+                            <span style="font-size: 10px;">2</span>
+                        </div>
+                    </div>
+                    <!-- ... resto de la escala de colores COMPLETA ... -->
+                </div>
+            </div>
+            
+            <script>
+            // Funciones para controlar la leyenda (TODO IGUAL)
+            function actualizarLeyendaPrecip() {
+                var leyenda = document.getElementById("leyendaPrecip");
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                var capaPrecipActiva = false;
+                
+                checkboxes.forEach(function(checkbox) {
+                    var label = checkbox.parentElement;
+                    if (label && label.textContent) {
+                        var textoLabel = label.textContent;
+                        if (textoLabel.includes("🌧️ PP") || textoLabel.includes("📅 PP")) {
+                            if (checkbox.checked) {
+                                capaPrecipActiva = true;
+                            }
+                        }
+                    }
+                });
+                
+                if (capaPrecipActiva) {
+                    leyenda.style.display = "block";
+                } else {
+                    leyenda.style.display = "none";
+                }
+            }
+            
+            function ocultarLeyendaPrecip() {
+                document.getElementById("leyendaPrecip").style.display = "none";
+            }
+            
+            // Inicializar
+            document.addEventListener("DOMContentLoaded", function() {
+                setTimeout(function() {
+                    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(function(checkbox) {
+                        checkbox.addEventListener("change", actualizarLeyendaPrecip);
+                    });
+                    
+                    if (typeof map !== "undefined") {
+                        map.on("overlayadd overlayremove", function(e) {
+                            if (e.name && (e.name.includes("🌧️ PP") || e.name.includes("📅 PP"))) {
+                                setTimeout(actualizarLeyendaPrecip, 100);
+                            }
+                        });
+                    }
+                    
+                    setTimeout(actualizarLeyendaPrecip, 500);
+                }, 1500);
+            });
+            </script>
+            
+    
+            <script>
+            // ============================================
+            // CONFIGURACIÓN AUTOMÁTICA - ¡CAMBIO PRINCIPAL!
+            // ============================================
+            const GEOJSON_AUTOMATICO_URL = 'https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/data/poligonos.geojson';
+            const HASH_USUARIO_VALIDO = 'f1d8e6433533be16';
+            const HASH_CONTRASENA_VALIDA = '75a84c7ca9714a48';
+            
+            // Variables globales
+            let mapaPoligonos = null;
+            let datosActuales = null;
+            
+            // ============================================
+            // FUNCIÓN PRINCIPAL: CARGAR DATOS AUTOMÁTICAMENTE
+            // ============================================
+            function cargarDatosAutomaticos() {
+                console.log('📡 Cargando datos automáticos desde:', GEOJSON_AUTOMATICO_URL);
+                
+                fetch(GEOJSON_AUTOMATICO_URL)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        return response.json();
+                    })
+                    .then(datos => {
+                        console.log('✅ Datos cargados:', datos.features.length, 'polígonos');
+                        datosActuales = datos;
+                        
+                        // Aquí llamarías a tus funciones:
+                        // procesarDatos(datos);
+                        // crearMapaLayers(datos);
+                        // crearLeyendaCultivos(datos);
+                        // crearBuscadorClientes(datos);
+                        // actualizarEstadisticas(datos);
+                        
+                        // Actualizar título
+                        const tituloDiv = document.querySelector('div[style*="top: 10px; left: 10px"]');
+                        if (tituloDiv) {
+                            const infoDiv = tituloDiv.querySelector('div[style*="margin-top: 4px"]');
+                            if (infoDiv) {
+                                infoDiv.innerHTML = `
+                                    <div><b>Actualizado:</b> 30/12/2025 15:42</div>
+                                    <div><b>Polígonos:</b> ${datos.features.length}</div>
+                                    <div><b>Fuente:</b> GitHub automático</div>
+                                `;
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error cargando datos:', error);
+                        // Mostrar mensaje de error
+                        const tituloDiv = document.querySelector('div[style*="top: 10px; left: 10px"]');
+                        if (tituloDiv) {
+                            const infoDiv = tituloDiv.querySelector('div[style*="margin-top: 4px"]');
+                            if (infoDiv) {
+                                infoDiv.innerHTML += `<div style="color: red;"><b>Error:</b> No se pudieron cargar datos</div>`;
+                            }
+                        }
+                    });
+            }
+            
+            // ============================================
+            // MODIFICAR TU FUNCIÓN DE LOGIN PARA CARGAR DATOS
+            // ============================================
+            // Buscar en tu código JavaScript original la función verificarAcceso()
+            // y agregar después del login exitoso: cargarDatosAutomaticos();
+            
+            // Ejemplo:
+            /*
+            async function verificarAcceso() {
+                // ... tu código de verificación de hash ...
+                
+                if (hashCorrecto) {
+                    // Login exitoso
+                    document.getElementById("loginScreen").style.display = "none";
+                    
+                    // ✅ AGREGAR ESTA LÍNEA:
+                    cargarDatosAutomaticos();
+                    
+                    // Resto de tu código...
+                }
+            }
+            */
+            
+            // ============================================
+            // INICIALIZACIÓN
+            // ============================================
+            document.addEventListener("DOMContentLoaded", function() {
+                // Si ya hay sesión activa, cargar datos automáticamente
+                if (localStorage.getItem('sesion_valida') === 'true') {
+                    setTimeout(cargarDatosAutomaticos, 1000);
+                }
+            });
+            </script>
+            
+    
+            <div class="folium-map" id="map_4d1e2ccc56a22665e46169543fab7180" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_4d1e2ccc56a22665e46169543fab7180 = L.map(
+                "map_4d1e2ccc56a22665e46169543fab7180",
+                {
+                    center: [-31.4201, -64.1888],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 11,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_4d1e2ccc56a22665e46169543fab7180);
+
+            
+
+        
+    
+            var tile_layer_37ce87eb6b4efccc617d1471a9ee5ea0 = L.tileLayer(
+                "https://mt1.google.com/vt/lyrs=s\u0026x={x}\u0026y={y}\u0026z={z}",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "Google",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_37ce87eb6b4efccc617d1471a9ee5ea0.addTo(map_4d1e2ccc56a22665e46169543fab7180);
+        
+    
+            var tile_layer_fe22004188b6e5df10f88ba0eefb8055 = L.tileLayer(
+                "https://mt1.google.com/vt/lyrs=y\u0026x={x}\u0026y={y}\u0026z={z}",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "Google",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_fe22004188b6e5df10f88ba0eefb8055.addTo(map_4d1e2ccc56a22665e46169543fab7180);
+        
+    
+            var tile_layer_c42d67ce63f95823e86c6bc7e72d8e57 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "\u00a9 CartoDB",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_c42d67ce63f95823e86c6bc7e72d8e57.addTo(map_4d1e2ccc56a22665e46169543fab7180);
+        
+    
+            var tile_layer_1ddb8ce0576e473b076c448ed6fa6e0c = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "\u00a9 OpenStreetMap",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_1ddb8ce0576e473b076c448ed6fa6e0c.addTo(map_4d1e2ccc56a22665e46169543fab7180);
+        
+    
+            var layer_control_fb4d41b9fd6565202a662b293ee92854_layers = {
+                base_layers : {
+                    "\ud83c\udf0d Google Sat\u00e9lite" : tile_layer_37ce87eb6b4efccc617d1471a9ee5ea0,
+                    "\ud83d\uddfa\ufe0f Google H\u00edbrido" : tile_layer_fe22004188b6e5df10f88ba0eefb8055,
+                    "\ud83c\udf19 Modo oscuro" : tile_layer_c42d67ce63f95823e86c6bc7e72d8e57,
+                    "\ud83c\udf10 OpenStreetMap" : tile_layer_1ddb8ce0576e473b076c448ed6fa6e0c,
+                },
+                overlays :  {
+                },
+            };
+            let layer_control_fb4d41b9fd6565202a662b293ee92854 = L.control.layers(
+                layer_control_fb4d41b9fd6565202a662b293ee92854_layers.base_layers,
+                layer_control_fb4d41b9fd6565202a662b293ee92854_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_4d1e2ccc56a22665e46169543fab7180);
+
+        
+    
+            L.control.fullscreen(
+                {
+  "position": "topright",
+  "title": "Pantalla completa",
+  "titleCancel": "Salir pantalla completa",
+  "forceSeparateButton": false,
+}
+            ).addTo(map_4d1e2ccc56a22665e46169543fab7180);
+        
+    
+            var measure_control_214c9cba70b9f2afa6c9b4d55438ecc4 = new L.Control.Measure(
+                {
+  "position": "topright",
+  "primaryLengthUnit": "meters",
+  "secondaryLengthUnit": "miles",
+  "primaryAreaUnit": "sqmeters",
+  "secondaryAreaUnit": "acres",
+});
+            map_4d1e2ccc56a22665e46169543fab7180.addControl(measure_control_214c9cba70b9f2afa6c9b4d55438ecc4);
+
+            // Workaround for using this plugin with Leaflet>=1.8.0
+            // https://github.com/ljagis/leaflet-measure/issues/171
+            L.Control.Measure.include({
+                _setCaptureMarkerIcon: function () {
+                    // disable autopan
+                    this._captureMarker.options.autoPanOnFocus = false;
+                    // default function
+                    this._captureMarker.setIcon(
+                        L.divIcon({
+                            iconSize: this._map.getSize().multiplyBy(2)
+                        })
+                    );
+                },
+            });
+
+        
+</script>
+</html>
