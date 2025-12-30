@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROGRAMA CÓRDOBA 25/26 - Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* TÍTULO MEJORADO */
+        .map-title {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #4CAF50;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            max-width: 200px;
+            min-width: 180px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .map-title-header {
+            font-weight: bold;
+            color: #2E7D32;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .map-title-info {
+            margin-top: 4px;
+            font-size: 9px;
+            color: #555;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 4px;
+        }
+
+        /* BOTÓN DE ACTUALIZACIÓN */
+        .update-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+
+        .update-button:hover {
+            background-color: #1976D2;
+        }
+
+        .update-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* INFO ACTUALIZACIÓN */
+        .update-info {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            z-index: 9999;
+            font-size: 11px;
+            color: #666;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+            max-width: 250px;
+        }
+
+        .update-success {
+            border-color: #4CAF50;
+            color: #2E7D32;
+        }
+
+        .update-error {
+            border-color: #f44336;
+            color: #d32f2f;
+        }
+
+        /* LEYENDA DE CULTIVOS (TU ESTILO) */
+        .legend-container {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #4CAF50;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            width: 160px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .legend-header {
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 6px;
+            font-size: 11px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 6px;
+            border: 1px solid #333;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .legend-label {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crop-name {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .crop-area {
+            font-size: 9px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        /* BUSCADOR (TU ESTILO) */
+        #lupitaBuscador {
+            position: fixed;
+            top: 100px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #4CAF50;
+            z-index: 9998;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            width: 220px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .buscador-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .buscador-title {
+            font-weight: bold;
+            color: #000000;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .buscador-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .buscador-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+
+        .buscador-btn {
+            flex: 1;
+            border: none;
+            padding: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .btn-filtrar {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-reset {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .estado-filtro {
+            font-size: 9px;
+            color: #666;
+            margin-top: 6px;
+            padding-top: 5px;
+            border-top: 1px solid #000000;
+        }
+
+        /* BOTÓN GRÁFICOS */
+        #btnGraficos {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #2E7D32;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            z-index: 9997;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        #btnGraficos:hover {
+            transform: scale(1.1);
+            background-color: #1B5E20;
+        }
+
+        /* PANEL DE GRÁFICOS */
+        #panelGraficos {
+            position: fixed;
+            bottom: -85%;
+            left: 0;
+            width: 100%;
+            height: 85%;
+            background-color: white;
+            z-index: 10001;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.3);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            transition: bottom 0.4s ease;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+        }
+
+        .panel-header {
+            position: sticky;
+            top: 0;
+            background-color: #2E7D32;
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* LEYENDA PRECIPITACIÓN (TU CÓDIGO) */
+        #leyendaPrecip {
+            position: fixed;
+            bottom: 40px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 2px solid #1E88E5;
+            z-index: 9996;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            width: 140px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Estilos para tooltips y popups */
+        .leaflet-tooltip-custom {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #4CAF50;
+            border-radius: 3px;
+            padding: 5px;
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #2E7D32;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- TÍTULO DEL MAPA -->
+    <div class="map-title">
+        <div class="map-title-header">
+            PROGRAMA CÓRDOBA 25/26
+        </div>
+        <div class="map-title-info">
+            <div><b>Última actualización:</b> <span id="lastUpdate">Cargando...</span></div>
+            <div><b>Polígonos:</b> <span id="polygonCount">0</span></div>
+            <div><b>Hectáreas totales:</b> <span id="totalHectares">0</span></div>
+        </div>
+    </div>
+
+    <!-- BOTÓN ACTUALIZAR -->
+    <button class="update-button" id="updateButton" onclick="checkForUpdates()">
+        <i class="fas fa-sync-alt"></i> Verificar actualización
+    </button>
+
+    <!-- INFO ACTUALIZACIÓN -->
+    <div class="update-info" id="updateInfo">
+        <span id="updateMessage"></span>
+    </div>
+
+    <!-- MAPA -->
+    <div id="map"></div>
+
+    <!-- BUSCADOR (se agregará dinámicamente) -->
+
+    <!-- LEYENDA CULTIVOS (se agregará dinámicamente) -->
+
+    <!-- BOTÓN GRÁFICOS -->
+    <div id="btnGraficos" onclick="togglePanelGraficos()">
+        📊
+    </div>
+
+    <!-- PANEL GRÁFICOS -->
+    <div id="panelGraficos">
+        <div class="panel-header">
+            <div class="panel-title">
+                <span>📊</span>
+                COMPARACIÓN POR ZONA - PROYECTADO vs ACTUAL
+            </div>
+            <button class="close-panel" onclick="togglePanelGraficos()">
+                ×
+            </button>
+        </div>
+        <div class="panel-content" id="panelContent">
+            <!-- Se llenará dinámicamente -->
+        </div>
+    </div>
+
+    <!-- LEYENDA PRECIPITACIÓN -->
+    <div id="leyendaPrecip">
+        <div style="font-weight: bold; color: #1E88E5; margin-bottom: 10px; border-bottom: 2px solid #1E88E5; padding-bottom: 6px; font-size: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span>🌧️</span>
+                    <span>Precipitación (mm)</span>
+                </div>
+                <button onclick="ocultarLeyendaPrecip()" style="background: none; border: none; color: #1E88E5; font-size: 16px; cursor: pointer; padding: 0; line-height: 1;">×</button>
+            </div>
+        </div>
+        <!-- Escala de colores (tu código) -->
+        <div style="margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #9e9eFF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">0</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">2</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #0000FF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">2</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">5</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FFFF; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">5</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">10</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FF80; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">10</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">15</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #00FF00; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">15</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">20</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FFFF00; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">20</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">30</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FFA500; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">30</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">50</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <div style="width: 18px; height: 18px; background-color: #FF4500; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px;">50</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px;">100</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 18px; height: 18px; background-color: #FF0000; margin-right: 10px; border: 1px solid #666; border-radius: 3px;"></div>
+                <div style="flex: 1; display: flex; justify-content: space-between;">
+                    <span style="font-size: 10px; font-weight: bold;">> 100</span>
+                    <span style="font-size: 10px; color: #666;">mm</span>
+                    <span style="font-size: 10px; font-weight: bold;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        // ============================================
+        // CONFIGURACIÓN GLOBAL - ¡MODIFICADO!
+        // ============================================
+        const GEOJSON_URL = 'https://raw.githubusercontent.com/franciscotomatis/APP-C-rdoba/main/data/poligonos.geojson';
+        const UPDATE_CHECK_URL = 'https://api.github.com/repos/franciscotomatis/APP-C-rdoba/commits?path=data/poligonos.geojson&per_page=1';
+        
+        // DATOS PROYECTADOS POR ZONA (TUS DATOS)
+        const HECTAREAS_PROYECTADAS = {
+            "1": 84940,
+            "2": 155256,
+            "3": 158675,
+            "4": 134574
+        };
+        
+        // VARIABLES GLOBALES
+        let map;
+        let geoJsonLayer;
+        let currentData = null;
+        let cropLayer = null;
+        let originalBounds = null;
+        
+        // ============================================
+        // FUNCIONES DE INICIALIZACIÓN
+        // ============================================
+        
+        function initMap() {
+            // Crear mapa
+            map = L.map('map', {
+                center: [-31.4201, -64.1888],
+                zoom: 11,
+                controlScale: true,
+                zoomControl: true
+            });
+            
+            // Agregar capas base (TUS CAPAS)
+            const baseLayers = {
+                '🌍 Google Satélite': L.tileLayer(
+                    'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+                    { attribution: 'Google', maxZoom: 20 }
+                ),
+                '🗺️ Google Híbrido': L.tileLayer(
+                    'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+                    { attribution: 'Google', maxZoom: 20 }
+                ),
+                '🌙 Modo oscuro': L.tileLayer(
+                    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                    { attribution: '© CartoDB', maxZoom: 20 }
+                ),
+                '🌐 OpenStreetMap': L.tileLayer(
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    { attribution: '© OpenStreetMap', maxZoom: 20 }
+                )
+            };
+            
+            // Agregar capa por defecto
+            baseLayers['🌍 Google Satélite'].addTo(map);
+            
+            // Agregar controles
+            L.control.layers(baseLayers, null, { position: 'topright', collapsed: true }).addTo(map);
+            
+            // Agregar controles de medida y pantalla completa
+            L.control.measure({
+                position: 'topright',
+                primaryLengthUnit: 'kilometers',
+                secondaryLengthUnit: 'meters',
+                primaryAreaUnit: 'hectares',
+                secondaryAreaUnit: 'meters'
+            }).addTo(map);
+            
+            // Control de pantalla completa
+            L.control.fullscreen({
+                position: 'topright',
+                title: 'Pantalla completa',
+                titleCancel: 'Salir pantalla completa'
+            }).addTo(map);
+            
+            // Cargar datos iniciales
+            loadGeoJSON();
+            
+            // Verificar última actualización
+            checkLastUpdate();
+        }
+        
+        // ============================================
+        // FUNCIONES DE CARGA DE DATOS
+        // ============================================
+        
+        function loadGeoJSON() {
+            console.log('📥 Cargando GeoJSON desde:', GEOJSON_URL);
+            
+            // Mostrar estado de carga
+            document.getElementById('polygonCount').textContent = 'Cargando...';
+            
+            fetch(GEOJSON_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    currentData = data;
+                    processData(data);
+                    createMapLayers(data);
+                    createLegend(data);
+                    createBuscador(data);
+                    updateStats(data);
+                    console.log('✅ GeoJSON cargado:', data.features.length, 'polígonos');
+                })
+                .catch(error => {
+                    console.error('❌ Error cargando GeoJSON:', error);
+                    document.getElementById('polygonCount').textContent = 'Error';
+                    document.getElementById('totalHectares').textContent = 'Error';
+                    
+                    // Mostrar mensaje de error
+                    showUpdateMessage('Error cargando datos. Intenta más tarde.', 'error');
+                });
+        }
+        
+        function processData(data) {
+            if (!data || !data.features) return;
+            
+            // Encontrar campos clave (igual que tu código)
+            const sampleFeature = data.features[0];
+            const props = sampleFeature.properties;
+            
+            window.cropField = null;
+            window.areaField = null;
+            window.clientField = null;
+            window.zoneField = null;
+            
+            // Buscar campos (TU LÓGICA)
+            const fieldNames = {
+                crop: ['CULTIVO', 'cultivo', 'Cultivo', 'CROP', 'crop'],
+                area: ['HECTAREAS_ASEGURADAS', 'HECTAREAS_DECLARADAS', 'hectareas', 'HECTAREAS', 'HAS', 'has'],
+                client: ['CLIENTE', 'cliente', 'Cliente', 'NOMBRE_CLIENTE'],
+                zone: ['ZONA_CZ4', 'ZONA', 'Zona', 'zona', 'CZ4']
+            };
+            
+            // Buscar campos existentes
+            for (let field in fieldNames) {
+                for (let name of fieldNames[field]) {
+                    if (props.hasOwnProperty(name)) {
+                        window[field + 'Field'] = name;
+                        break;
+                    }
+                }
+            }
+            
+            console.log('Campos detectados:', {
+                crop: window.cropField,
+                area: window.areaField,
+                client: window.clientField,
+                zone: window.zoneField
+            });
+        }
+        
+        // ============================================
+        // FUNCIONES DE MAPA (TUS ESTILOS)
+        // ============================================
+        
+        function getColorByCrop(cropName) {
+            if (!cropName) return '#9C27B0';
+            
+            const crop = cropName.toString().toLowerCase();
+            
+            if (crop.includes('soja') || crop.includes('soya')) return '#4CAF50';
+            if (crop.includes('maíz') || crop.includes('maiz') || crop.includes('corn')) return '#FFC107';
+            if (crop.includes('trigo') || crop.includes('wheat')) return '#795548';
+            if (crop.includes('girasol') || crop.includes('sunflower')) return '#FF9800';
+            if (crop.includes('algodón') || crop.includes('algodon') || crop.includes('cotton')) return '#2196F3';
+            if (crop.includes('sorgo') || crop.includes('sorghum')) return '#E91E63';
+            
+            return '#9C27B0'; // Color por defecto
+        }
+        
+        function styleByCrop(feature) {
+            const props = feature.properties;
+            const crop = window.cropField ? props[window.cropField] : null;
+            
+            // Guardar colores para restauración
+            props._color_fill = getColorByCrop(crop);
+            props._color_border = '#7B1FA2'; // Borde por defecto
+            
+            return {
+                fillColor: props._color_fill,
+                color: props._color_border,
+                weight: 2,
+                fillOpacity: 0.6,
+                dashArray: '5, 5'
+            };
+        }
+        
+        function highlightFeature(e) {
+            const layer = e.target;
+            layer.setStyle({
+                fillColor: '#FF5722',
+                color: '#D84315',
+                weight: 3,
+                fillOpacity: 0.8,
+                dashArray: '5, 5'
+            });
+        }
+        
+        function resetHighlight(e) {
+            if (cropLayer) {
+                cropLayer.resetStyle(e.target);
+            }
+        }
+        
+        function createMapLayers(data) {
+            // Remover capa anterior si existe
+            if (cropLayer) {
+                map.removeLayer(cropLayer);
+            }
+            
+            // Crear nueva capa
+            cropLayer = L.geoJSON(data, {
+                style: styleByCrop,
+                onEachFeature: function(feature, layer) {
+                    // Tooltip (TU LÓGICA)
+                    const tooltipFields = [];
+                    if (window.clientField && feature.properties[window.clientField]) {
+                        tooltipFields.push(window.clientField);
+                    } else if (window.cropField && feature.properties[window.cropField]) {
+                        tooltipFields.push(window.cropField);
+                    } else {
+                        tooltipFields.push('excel_fila_num');
+                    }
+                    
+                    if (tooltipFields.length > 0) {
+                        const tooltipText = tooltipFields.map(field => 
+                            feature.properties[field] || ''
+                        ).filter(text => text).join(' - ');
+                        
+                        if (tooltipText) {
+                            layer.bindTooltip(tooltipText, {
+                                sticky: true,
+                                className: 'leaflet-tooltip-custom'
+                            });
+                        }
+                    }
+                    
+                    // Popup (TU LÓGICA)
+                    const popupFields = [
+                        'CUIT', 'CLIENTE', 'CAMPO', 'DEPARTAMENTO', 'LOCALIDAD', 'CULTIVO', 'LOTE',
+                        'CULTIVO_ANTERIOR', 'RENDIMIENTO_ANTERIOR', 'HECTAREAS_DECLARADAS',
+                        'HECTAREAS_ASEGURADAS', 'PORCENTAJE_ASEGURADO', 'ZONA_CZ4',
+                        'RENDIMIENTO_ASEGURADO', 'SUMA_ASEGURADA', 'FECHA_CREACION'
+                    ];
+                    
+                    const existingFields = popupFields.filter(field => 
+                        feature.properties.hasOwnProperty(field)
+                    );
+                    
+                    if (existingFields.length > 0) {
+                        const popupContent = existingFields.map(field => 
+                            `<b>${field}:</b> ${feature.properties[field] || 'N/A'}`
+                        ).join('<br>');
+                        
+                        layer.bindPopup(popupContent, {
+                            maxHeight: 400,
+                            maxWidth: 350,
+                            className: 'custom-popup'
+                        });
+                    }
+                    
+                    // Eventos de mouse
+                    layer.on({
+                        mouseover: highlightFeature,
+                        mouseout: resetHighlight
+                    });
+                }
+            }).addTo(map);
+            
+            // Guardar bounds originales
+            if (cropLayer.getBounds().isValid()) {
+                originalBounds = cropLayer.getBounds();
+                map.fitBounds(originalBounds);
+            }
+            
+            // Agregar capas WMS (TU CÓDIGO)
+            addWMSLayers();
+        }
+        
+        // ============================================
+        // FUNCIONES WMS (TU CÓDIGO ADAPTADO)
+        // ============================================
+        
+        function addWMSLayers() {
+            // IMERG Diario
+            const imergLayers = [
+                { layer: 'MOM_GPMIMERG_PA1D_1', opacity: 0.7, name: '🌧️ PP Día 1' },
+                { layer: 'MOM_GPMIMERG_PA1D_2', opacity: 0.6, name: '🌧️ PP Día 2' },
+                { layer: 'MOM_GPMIMERG_PA1D_3', opacity: 0.5, name: '🌧️ PP Día 3' }
+            ];
+            
+            imergLayers.forEach(layerInfo => {
+                const wmsLayer = L.tileLayer.wms('https://geoservicios2.conae.gov.ar/geoserver/PrecipitacionAcumulada/wms', {
+                    layers: layerInfo.layer,
+                    format: 'image/png',
+                    transparent: true,
+                    opacity: layerInfo.opacity,
+                    attribution: 'CONAE IMERG'
+                });
+                
+                // Agregar al control de capas
+                wmsLayer.addTo(map);
+                wmsLayer.setZIndex(1000); // Asegurar que esté sobre los polígonos
+                
+                // Evento para mostrar/ocultar leyenda
+                wmsLayer.on('add', function() {
+                    document.getElementById('leyendaPrecip').style.display = 'block';
+                });
+                
+                wmsLayer.on('remove', function() {
+                    updatePrecipLegend();
+                });
+            });
+            
+            // CHIRPS Mensual
+            const chirpsLayers = [
+                { layer: 'PrecipitacionAcumulada:MOM_CHIRPS_PA1M_1', opacity: 0.5, name: '📅 PP Mes Actual' },
+                { layer: 'PrecipitacionAcumulada:MOM_CHIRPS_PA1M_2', opacity: 0.4, name: '📅 PP Mes Anterior' }
+            ];
+            
+            chirpsLayers.forEach(layerInfo => {
+                const wmsLayer = L.tileLayer.wms('https://geoservicios2.conae.gov.ar/geoserver/wms', {
+                    layers: layerInfo.layer,
+                    format: 'image/png',
+                    transparent: true,
+                    opacity: layerInfo.opacity,
+                    attribution: 'CONAE CHIRPS'
+                });
+                
+                wmsLayer.addTo(map);
+                wmsLayer.setZIndex(1000);
+                
+                wmsLayer.on('add', function() {
+                    document.getElementById('leyendaPrecip').style.display = 'block';
+                });
+                
+                wmsLayer.on('remove', function() {
+                    updatePrecipLegend();
+                });
+            });
+        }
+        
+        function updatePrecipLegend() {
+            const legend = document.getElementById('leyendaPrecip');
+            const layers = map._layers;
+            let precipActive = false;
+            
+            for (let id in layers) {
+                const layer = layers[id];
+                if (layer._url && (layer._url.includes('PrecipitacionAcumulada') || layer._url.includes('geoservicios2'))) {
+                    if (map.hasLayer(layer)) {
+                        precipActive = true;
+                        break;
+                    }
+                }
+            }
+            
+            legend.style.display = precipActive ? 'block' : 'none';
+        }
+        
+        function ocultarLeyendaPrecip() {
+            document.getElementById('leyendaPrecip').style.display = 'none';
+        }
+        
+        // ============================================
+        // LEYENDA DE CULTIVOS (TU CÓDIGO ADAPTADO)
+        // ============================================
+        
+        function createLegend(data) {
+            if (!window.cropField || !window.areaField) return;
+            
+            // Calcular superficie por cultivo
+            const cropAreas = {};
+            let totalArea = 0;
+            
+            data.features.forEach(feature => {
+                const crop = feature.properties[window.cropField];
+                const area = parseFloat(feature.properties[window.areaField]) || 0;
+                
+                if (crop) {
+                    cropAreas[crop] = (cropAreas[crop] || 0) + area;
+                    totalArea += area;
+                }
+            });
+            
+            // Ordenar por área
+            const sortedCrops = Object.entries(cropAreas)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8); // Top 8 cultivos
+            
+            // Crear HTML de leyenda
+            let legendHTML = `
+                <div class="legend-container">
+                    <div class="legend-header">
+                        Cultivos (${Object.keys(cropAreas).length})
+                    </div>
+            `;
+            
+            sortedCrops.forEach(([crop, area]) => {
+                const percentage = totalArea > 0 ? (area / totalArea * 100) : 0;
+                const color = getColorByCrop(crop);
+                
+                legendHTML += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: ${color};"></div>
+                        <div class="legend-label">
+                            <span class="crop-name">${crop.substring(0, 15)}${crop.length > 15 ? '...' : ''}</span>
+                            <span class="crop-area">${area.toFixed(0)}ha (${percentage.toFixed(0)}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            legendHTML += `
+                    <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #4CAF50; font-size: 10px; font-weight: bold; color: #2E7D32; text-align: center;">
+                        TOTAL: ${totalArea.toFixed(0)} ha
+                    </div>
+                </div>
+            `;
+            
+            // Agregar al DOM
+            const existingLegend = document.querySelector('.legend-container');
+            if (existingLegend) existingLegend.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', legendHTML);
+        }
+        
+        // ============================================
+        // BUSCADOR DE CLIENTES (TU CÓDIGO ADAPTADO)
+        // ============================================
+        
+        function createBuscador(data) {
+            if (!window.clientField) return;
+            
+            // Obtener lista única de clientes
+            const clients = [...new Set(
+                data.features
+                    .map(f => f.properties[window.clientField])
+                    .filter(c => c)
+            )].sort();
+            
+            const buscadorHTML = `
+                <div id="lupitaBuscador">
+                    <div class="buscador-header">
+                        <div class="buscador-title">
+                            <span style="margin-right: 5px;">🔍</span>
+                            Buscar cliente
+                        </div>
+                        <button id="toggleBuscador" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #000000;" onclick="toggleBuscador()">▲</button>
+                    </div>
+                    
+                    <div id="contenidoBuscador">
+                        <input list="clientesList" id="clienteInput" placeholder="Escribe o selecciona..." class="buscador-input">
+                        <datalist id="clientesList">
+                            ${clients.map(c => `<option value="${c}">`).join('')}
+                        </datalist>
+                        
+                        <div class="buscador-buttons">
+                            <button onclick="filtrarCliente()" class="buscador-btn btn-filtrar">Filtrar</button>
+                            <button onclick="resetearFiltro()" class="buscador-btn btn-reset">Reset</button>
+                        </div>
+                        
+                        <div id="estadoFiltro" class="estado-filtro">
+                            Mostrando todos (${data.features.length})
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar al DOM
+            const existingBuscador = document.getElementById('lupitaBuscador');
+            if (existingBuscador) existingBuscador.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', buscadorHTML);
+            
+            // Inicializar poligonos
+            setTimeout(inicializarPoligonos, 1000);
+        }
+        
+        // ============================================
+        // FUNCIONES DEL BUSCADOR
+        // ============================================
+        
+        window.toggleBuscador = function() {
+            const contenido = document.getElementById('contenidoBuscador');
+            const toggleBtn = document.getElementById('toggleBuscador');
+            const lupita = document.getElementById('lupitaBuscador');
+            
+            if (contenido.style.display !== 'none') {
+                contenido.style.display = 'none';
+                toggleBtn.innerHTML = '▼';
+                lupita.style.width = '150px';
+                lupita.style.padding = '5px 8px';
+            } else {
+                contenido.style.display = 'block';
+                toggleBtn.innerHTML = '▲';
+                lupita.style.width = '220px';
+                lupita.style.padding = '8px 10px';
+            }
+        };
+        
+        window.inicializarPoligonos = function() {
+            if (!cropLayer) return;
+            
+            cropLayer.eachLayer(function(layer) {
+                // Guardar estilo original
+                layer._estiloOriginal = {
+                    fillColor: layer.options.fillColor,
+                    color: layer.options.color,
+                    weight: layer.options.weight,
+                    fillOpacity: layer.options.fillOpacity,
+                    opacity: layer.options.opacity,
+                    interactive: layer.options.interactive
+                };
+            });
+        };
+        
+        window.filtrarCliente = function() {
+            const valor = document.getElementById('clienteInput').value.toLowerCase();
+            if (!valor) {
+                alert('Por favor, escribe o selecciona un cliente');
+                return;
+            }
+            
+            let boundsFiltrados = null;
+            let contador = 0;
+            
+            cropLayer.eachLayer(function(layer) {
+                const propiedades = layer.feature.properties;
+                const clienteEnPoligono = propiedades[window.clientField];
+                
+                if (clienteEnPoligono && clienteEnPoligono.toString().toLowerCase().includes(valor)) {
+                    // Mostrar este polígono
+                    layer.setStyle({
+                        fillOpacity: 0.6,
+                        weight: 2,
+                        opacity: 1
+                    });
+                    
+                    layer.options.interactive = true;
+                    
+                    // Agregar a bounds
+                    const layerBounds = layer.getBounds();
+                    if (layerBounds) {
+                        if (!boundsFiltrados) {
+                            boundsFiltrados = layerBounds;
+                        } else {
+                            boundsFiltrados = boundsFiltrados.extend(layerBounds);
+                        }
+                    }
+                    contador++;
+                } else {
+                    // Ocultar este polígono
+                    layer.setStyle({
+                        fillOpacity: 0,
+                        weight: 0,
+                        opacity: 0
+                    });
+                    
+                    layer.options.interactive = false;
+                    
+                    // Deshabilitar tooltip
+                    if (layer._tooltip) {
+                        layer._tooltip.options.interactive = false;
+                        layer.unbindTooltip();
+                    }
+                    
+                    // Deshabilitar popup
+                    if (layer._popup) {
+                        layer.unbindPopup();
+                    }
+                    
+                    // Remover event listeners
+                    layer.off('mouseover');
+                    layer.off('mouseout');
+                    layer.off('click');
+                }
+            });
+            
+            // Actualizar estado
+            const estadoDiv = document.getElementById('estadoFiltro');
+            if (contador > 0) {
+                estadoDiv.innerHTML = `Mostrando ${contador} polígonos`;
+                estadoDiv.style.color = '#4CAF50';
+                
+                // Zoom a los polígonos filtrados
+                if (boundsFiltrados) {
+                    map.fitBounds(boundsFiltrados, { padding: [50, 50] });
+                }
+            } else {
+                estadoDiv.innerHTML = '❌ No se encontraron';
+                estadoDiv.style.color = '#f44336';
+            }
+        };
+        
+        window.resetearFiltro = function() {
+            // Limpiar input
+            document.getElementById('clienteInput').value = '';
+            
+            // Restaurar TODOS los polígonos
+            cropLayer.eachLayer(function(layer) {
+                // Restaurar estilo original
+                if (layer._estiloOriginal) {
+                    layer.setStyle(layer._estiloOriginal);
+                }
+                
+                // Restaurar interactividad
+                layer.options.interactive = true;
+                
+                // Restaurar tooltip
+                const propiedades = layer.feature.properties;
+                if (propiedades[window.clientField] && !layer._tooltip) {
+                    layer.bindTooltip(propiedades[window.clientField], {
+                        sticky: true,
+                        className: 'leaflet-tooltip-custom'
+                    });
+                }
+                
+                // Restaurar event listeners
+                layer.on('mouseover', highlightFeature);
+                layer.on('mouseout', resetHighlight);
+            });
+            
+            // Forzar redibujado
+            cropLayer.redraw();
+            
+            // Restaurar zoom original
+            if (originalBounds) {
+                map.fitBounds(originalBounds);
+            }
+            
+            // Actualizar estado
+            const estadoDiv = document.getElementById('estadoFiltro');
+            estadoDiv.innerHTML = `Mostrando todos (${currentData.features.length})`;
+            estadoDiv.style.color = '#666';
+        };
+        
+        // Permitir Enter para filtrar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const input = document.getElementById('clienteInput');
+                if (input) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            filtrarCliente();
+                        }
+                    });
+                }
+            }, 2000);
+        });
+        
+        // ============================================
+        // GRÁFICOS Y PANEL (TU CÓDIGO ADAPTADO)
+        // ============================================
+        
+        window.togglePanelGraficos = function() {
+            const panel = document.getElementById('panelGraficos');
+            const btn = document.getElementById('btnGraficos');
+            
+            if (panel.style.bottom === '0px') {
+                // Cerrar panel
+                panel.style.bottom = '-85%';
+                btn.innerHTML = '📊';
+                btn.style.backgroundColor = '#2E7D32';
+            } else {
+                // Abrir panel
+                panel.style.bottom = '0';
+                btn.innerHTML = '📈';
+                btn.style.backgroundColor = '#2196F3';
+                updateGraphsPanel();
+            }
+        };
+        
+        function updateGraphsPanel() {
+            if (!currentData || !window.zoneField || !window.areaField) return;
+            
+            // Calcular hectáreas por zona reales
+            const hectareasReales = {};
+            let totalReal = 0;
+            
+            currentData.features.forEach(feature => {
+                const zona = feature.properties[window.zoneField];
+                const hectareas = parseFloat(feature.properties[window.areaField]) || 0;
+                
+                if (zona) {
+                    const zonaStr = zona.toString().trim();
+                    hectareasReales[zonaStr] = (hectareasReales[zonaStr] || 0) + hectareas;
+                    totalReal += hectareas;
+                }
+            });
+            
+            // Preparar datos
+            const zonas = ['1', '2', '3', '4'];
+            const datosProyectados = zonas.map(z => HECTAREAS_PROYECTADAS[z] || 0);
+            const datosReales = zonas.map(z => hectareasReales[z] || 0);
+            const totalProyectado = datosProyectados.reduce((a, b) => a + b, 0);
+            
+            // Calcular máximos para escalado
+            const maxValor = Math.max(...datosProyectados, ...datosReales);
+            
+            // Generar HTML del panel
+            let panelHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #2E7D32;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">TOTAL PROYECTADO</div>
+                        <div style="font-size: 22px; font-weight: bold; color: #2E7D32;">
+                            ${totalProyectado.toLocaleString('es-AR')} ha
+                        </div>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">TOTAL ACTUAL</div>
+                        <div style="font-size: 22px; font-weight: bold; color: #2196F3;">
+                            ${totalReal.toLocaleString('es-AR')} ha
+                        </div>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #FF9800;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">DIFERENCIA TOTAL</div>
+                        <div style="font-size: 22px; font-weight: bold; color: ${(totalReal - totalProyectado) >= 0 ? '#4CAF50' : 'red'}">
+                            ${(totalReal - totalProyectado) >= 0 ? '+' : ''}${(totalReal - totalProyectado).toLocaleString('es-AR')} ha
+                        </div>
+                    </div>
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #9C27B0;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">% DE CUMPLIMIENTO</div>
+                        <div style="font-size: 22px; font-weight: bold; color: ${(totalReal / totalProyectado * 100) >= 100 ? '#4CAF50' : 'red'}">
+                            ${totalProyectado > 0 ? ((totalReal / totalProyectado) * 100).toFixed(1) : '0.0'}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; margin-bottom: 20px; color: #333; font-size: 16px; border-bottom: 2px solid #2E7D32; padding-bottom: 8px;">
+                        HECTÁREAS POR ZONA - COMPARACIÓN
+                    </h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+            `;
+            
+            // Generar barras para cada zona
+            zonas.forEach((zona, i) => {
+                const proyectado = datosProyectados[i];
+                const real = datosReales[i];
+                const diferencia = real - proyectado;
+                const porcentaje = proyectado > 0 ? (diferencia / proyectado * 100) : 0;
+                
+                // Calcular anchos relativos
+                const anchoProyectado = Math.min(95, (proyectado / maxValor * 95));
+                const anchoReal = Math.min(95, (real / maxValor * 95));
+                
+                // Determinar colores
+                const colorProyectado = '#2E7D32';
+                const colorReal = diferencia >= 0 ? '#2196F3' : '#f44336';
+                const colorDiferencia = diferencia >= 0 ? '#4CAF50' : '#f44336';
+                const iconoDiferencia = diferencia >= 0 ? '↗️' : '↘️';
+                
+                panelHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <div style="font-weight: bold; color: #333; font-size: 14px;">ZONA ${zona}</div>
+                            <div style="font-size: 13px; color: #666;">
+                                Diferencia: <span style="font-weight: bold; color: ${colorDiferencia}">
+                                    ${diferencia >= 0 ? '+' : ''}${diferencia.toLocaleString('es-AR')} ha (${porcentaje >= 0 ? '+' : ''}${porcentaje.toFixed(1)}%) ${iconoDiferencia}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <span style="font-size: 12px; color: #666;">Proyectado</span>
+                                <span style="font-size: 12px; font-weight: bold; color: ${colorProyectado}">${proyectado.toLocaleString('es-AR')} ha</span>
+                            </div>
+                            <div style="width: 100%; background-color: #f0f0f0; border-radius: 4px; height: 24px; overflow: hidden;">
+                                <div style="width: ${anchoProyectado}%; height: 100%; background-color: ${colorProyectado}; border-radius: 4px; display: flex; align-items: center; padding-left: 10px;">
+                                    <span style="color: white; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">PROYECTADO</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                <span style="font-size: 12px; color: #666;">Actual</span>
+                                <span style="font-size: 12px; font-weight: bold; color: ${colorReal}">${real.toLocaleString('es-AR')} ha</span>
+                            </div>
+                            <div style="width: 100%; background-color: #f0f0f0; border-radius: 4px; height: 24px; overflow: hidden;">
+                                <div style="width: ${anchoReal}%; height: 100%; background-color: ${colorReal}; border-radius: 4px; display: flex; align-items: center; padding-left: 10px;">
+                                    <span style="color: white; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">ACTUAL</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            panelHTML += `
+                    </div>
+                </div>
+                
+                <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; color: #333; font-size: 16px;">RESUMEN</h3>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background-color: #f5f5f5;">
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #2E7D32;">ZONA</th>
+                                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">PROYECTADO (ha)</th>
+                                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">ACTUAL (ha)</th>
+                                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">DIFERENCIA (ha)</th>
+                                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #2E7D32;">% VARIACIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Tabla de datos
+            zonas.forEach((zona, i) => {
+                const proyectado = datosProyectados[i];
+                const real = datosReales[i];
+                const diferencia = real - proyectado;
+                const porcentaje = proyectado > 0 ? (diferencia / proyectado * 100) : 0;
+                const colorDiferencia = diferencia >= 0 ? '#4CAF50' : '#f44336';
+                
+                panelHTML += `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px; font-weight: bold;">Zona ${zona}</td>
+                        <td style="padding: 10px; text-align: right;">${proyectado.toLocaleString('es-AR')}</td>
+                        <td style="padding: 10px; text-align: right; font-weight: bold;">${real.toLocaleString('es-AR')}</td>
+                        <td style="padding: 10px; text-align: right; color: ${colorDiferencia}; font-weight: bold;">${diferencia >= 0 ? '+' : ''}${diferencia.toLocaleString('es-AR')}</td>
+                        <td style="padding: 10px; text-align: right; color: ${colorDiferencia};">${porcentaje >= 0 ? '+' : ''}${porcentaje.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            
+            panelHTML += `
+                            </tbody>
+                            <tfoot style="background-color: #f9f9f9; font-weight: bold;">
+                                <tr>
+                                    <td style="padding: 10px; border-top: 2px solid #2E7D32;">TOTAL</td>
+                                    <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32;">${totalProyectado.toLocaleString('es-AR')}</td>
+                                    <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32;">${totalReal.toLocaleString('es-AR')}</td>
+                                    <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32; color: ${(totalReal - totalProyectado) >= 0 ? '#4CAF50' : '#f44336'};">${(totalReal - totalProyectado) >= 0 ? '+' : ''}${(totalReal - totalProyectado).toLocaleString('es-AR')}</td>
+                                    <td style="padding: 10px; text-align: right; border-top: 2px solid #2E7D32; color: ${((totalReal / totalProyectado * 100) - 100) >= 0 ? '#4CAF50' : '#f44336'};">${totalProyectado > 0 ? ((totalReal / totalProyectado * 100) - 100).toFixed(1) : '0.0'}%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Actualizar contenido del panel
+            document.getElementById('panelContent').innerHTML = panelHTML;
+        }
+        
+        // ============================================
+        // FUNCIONES DE ACTUALIZACIÓN
+        // ============================================
+        
+        function checkLastUpdate() {
+            fetch(UPDATE_CHECK_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data[0] && data[0].commit) {
+                        const lastCommit = new Date(data[0].commit.committer.date);
+                        const now = new Date();
+                        const diffHours = Math.floor((now - lastCommit) / (1000 * 60 * 60));
+                        
+                        let timeText;
+                        if (diffHours < 1) {
+                            timeText = 'Hace menos de 1 hora';
+                        } else if (diffHours === 1) {
+                            timeText = 'Hace 1 hora';
+                        } else if (diffHours < 24) {
+                            timeText = `Hace ${diffHours} horas`;
+                        } else {
+                            const diffDays = Math.floor(diffHours / 24);
+                            timeText = `Hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
+                        }
+                        
+                        document.getElementById('lastUpdate').textContent = timeText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error verificando actualización:', error);
+                    document.getElementById('lastUpdate').textContent = 'Desconocido';
+                });
+        }
+        
+        function checkForUpdates() {
+            const updateBtn = document.getElementById('updateButton');
+            const updateInfo = document.getElementById('updateInfo');
+            const updateMessage = document.getElementById('updateMessage');
+            
+            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+            updateBtn.disabled = true;
+            
+            // Verificar si hay actualizaciones
+            fetch(UPDATE_CHECK_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data[0] && data[0].sha) {
+                        const lastSha = localStorage.getItem('lastGeoJSONSha');
+                        const currentSha = data[0].sha;
+                        
+                        if (lastSha === currentSha) {
+                            showUpdateMessage('✅ Ya tienes la versión más reciente', 'success');
+                        } else {
+                            // Recargar datos
+                            loadGeoJSON();
+                            localStorage.setItem('lastGeoJSONSha', currentSha);
+                            showUpdateMessage('🎉 Datos actualizados correctamente', 'success');
+                        }
+                    } else {
+                        showUpdateMessage('⚠️ No se pudo verificar actualización', 'error');
+                    }
+                })
+                .catch(error => {
+                    showUpdateMessage('❌ Error de conexión', 'error');
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        updateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Verificar actualización';
+                        updateBtn.disabled = false;
+                    }, 1000);
+                });
+        }
+        
+        function showUpdateMessage(message, type) {
+            const updateInfo = document.getElementById('updateInfo');
+            const updateMessage = document.getElementById('updateMessage');
+            
+            updateInfo.className = 'update-info';
+            updateInfo.classList.add(`update-${type}`);
+            updateMessage.textContent = message;
+            updateInfo.style.display = 'block';
+            
+            setTimeout(() => {
+                updateInfo.style.display = 'none';
+            }, 5000);
+        }
+        
+        // ============================================
+        // FUNCIONES AUXILIARES
+        // ============================================
+        
+        function updateStats(data) {
+            if (!data || !data.features) return;
+            
+            const count = data.features.length;
+            document.getElementById('polygonCount').textContent = count.toLocaleString('es-AR');
+            
+            // Calcular hectáreas totales si existe el campo
+            if (window.areaField) {
+                let totalHectares = 0;
+                data.features.forEach(feature => {
+                    const hectareas = parseFloat(feature.properties[window.areaField]) || 0;
+                    totalHectares += hectareas;
+                });
+                document.getElementById('totalHectares').textContent = totalHectares.toLocaleString('es-AR', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+            }
+        }
+        
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            
+            // Configurar eventos de leyenda de precipitación
+            setTimeout(function() {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.addEventListener('change', updatePrecipLegend);
+                });
+                
+                map.on('overlayadd overlayremove', function(e) {
+                    if (e.name && (e.name.includes('🌧️') || e.name.includes('📅'))) {
+                        setTimeout(updatePrecipLegend, 100);
+                    }
+                });
+                
+                setTimeout(updatePrecipLegend, 500);
+            }, 1500);
+            
+            // Configurar actualización automática cada 6 horas
+            setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>
