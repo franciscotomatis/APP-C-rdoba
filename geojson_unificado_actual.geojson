@@ -2,9 +2,9 @@
   "type": "FeatureCollection",
   "properties": {
     "generado_por": "Script Autom\u00e1tico GitHub Actions",
-    "fecha": "2026-08-10 07:07:49",
+    "fecha": "2026-08-10 12:42:17",
     "poligonos": 5701,
-    "siniestros": 365,
+    "siniestros": 366,
     "hectareas": 426782.33999999997
   },
   "features": [
@@ -191324,9 +191324,9 @@
         "SUMA_ASEGURADA": 19890.68,
         "FECHA_CREACION": "2026-01-05",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Inundaci\u00f3n",
+        "FECHA_STRO": "01/06/2026",
+        "DA\u00d1O_ESTIMADO": "90,00"
       },
       "geometry": {
         "type": "Polygon",
