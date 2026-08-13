@@ -2,9 +2,9 @@
   "type": "FeatureCollection",
   "properties": {
     "generado_por": "Script Autom\u00e1tico GitHub Actions",
-    "fecha": "2026-08-13 12:43:10",
+    "fecha": "2026-08-13 18:47:05",
     "poligonos": 5701,
-    "siniestros": 367,
+    "siniestros": 386,
     "hectareas": 426782.33999999997
   },
   "features": [
@@ -51972,9 +51972,9 @@
         "SUMA_ASEGURADA": 15470.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -52456,9 +52456,9 @@
         "SUMA_ASEGURADA": 20553.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -52584,9 +52584,9 @@
         "SUMA_ASEGURADA": 20995.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -53124,9 +53124,9 @@
         "SUMA_ASEGURADA": 17901.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -53216,9 +53216,9 @@
         "SUMA_ASEGURADA": 15300.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -53492,9 +53492,9 @@
         "SUMA_ASEGURADA": 31280.0,
         "FECHA_CREACION": "2026-01-14",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -58892,9 +58892,9 @@
         "SUMA_ASEGURADA": 73100.0,
         "FECHA_CREACION": "2026-01-13",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -59384,9 +59384,9 @@
         "SUMA_ASEGURADA": 21933.4,
         "FECHA_CREACION": "2026-01-13",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -61144,9 +61144,9 @@
         "SUMA_ASEGURADA": 36720.0,
         "FECHA_CREACION": "2026-01-13",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -61572,9 +61572,9 @@
         "SUMA_ASEGURADA": 60775.0,
         "FECHA_CREACION": "2026-01-13",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -70088,9 +70088,9 @@
         "SUMA_ASEGURADA": 53380.0,
         "FECHA_CREACION": "2026-01-12",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -70240,9 +70240,9 @@
         "SUMA_ASEGURADA": 40664.0,
         "FECHA_CREACION": "2026-01-12",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -70676,9 +70676,9 @@
         "SUMA_ASEGURADA": 16660.0,
         "FECHA_CREACION": "2026-01-12",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -71300,9 +71300,9 @@
         "SUMA_ASEGURADA": 28560.0,
         "FECHA_CREACION": "2026-01-12",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -71404,9 +71404,9 @@
         "SUMA_ASEGURADA": 50320.0,
         "FECHA_CREACION": "2026-01-12",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -82116,9 +82116,9 @@
         "SUMA_ASEGURADA": 31140.6,
         "FECHA_CREACION": "2026-01-09",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -82252,9 +82252,9 @@
         "SUMA_ASEGURADA": 49510.8,
         "FECHA_CREACION": "2026-01-09",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -82888,9 +82888,9 @@
         "SUMA_ASEGURADA": 19043.4,
         "FECHA_CREACION": "2026-01-09",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -82976,9 +82976,9 @@
         "SUMA_ASEGURADA": 100650.2,
         "FECHA_CREACION": "2026-01-09",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Viento",
+        "FECHA_STRO": "06/08/2026",
+        "DA\u00d1O_ESTIMADO": "100,00"
       },
       "geometry": {
         "type": "Polygon",
