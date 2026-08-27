@@ -2,9 +2,9 @@
   "type": "FeatureCollection",
   "properties": {
     "generado_por": "Script Autom\u00e1tico GitHub Actions",
-    "fecha": "2026-08-27 05:36:57",
+    "fecha": "2026-08-27 17:02:57",
     "poligonos": 5701,
-    "siniestros": 386,
+    "siniestros": 390,
     "hectareas": 426782.33999999997
   },
   "features": [
@@ -247420,9 +247420,9 @@
         "SUMA_ASEGURADA": 8568.0,
         "FECHA_CREACION": "2025-12-22",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Granizo",
+        "FECHA_STRO": "31/07/2026",
+        "DA\u00d1O_ESTIMADO": "65,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -247632,9 +247632,9 @@
         "SUMA_ASEGURADA": 4998.0,
         "FECHA_CREACION": "2025-12-22",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Granizo",
+        "FECHA_STRO": "31/07/2026",
+        "DA\u00d1O_ESTIMADO": "65,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -249164,9 +249164,9 @@
         "SUMA_ASEGURADA": 7140.0,
         "FECHA_CREACION": "2025-12-22",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Granizo",
+        "FECHA_STRO": "31/07/2026",
+        "DA\u00d1O_ESTIMADO": "80,00"
       },
       "geometry": {
         "type": "Polygon",
@@ -249472,9 +249472,9 @@
         "SUMA_ASEGURADA": 7140.0,
         "FECHA_CREACION": "2025-12-22",
         "ESTADO": "Dibujado",
-        "CAUSA_STRO": null,
-        "FECHA_STRO": null,
-        "DA\u00d1O_ESTIMADO": null
+        "CAUSA_STRO": "Granizo",
+        "FECHA_STRO": "31/07/2026",
+        "DA\u00d1O_ESTIMADO": "80,00"
       },
       "geometry": {
         "type": "Polygon",
